@@ -7,8 +7,9 @@ export default function Inbox({ refreshFlag }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [musilikedIds, setMusilikedIds] = useState([]);
+  const [hiddenIds, setHiddenIds] = useState([]);
 
-  // Fetch inbox and musiliked tracks on mount and when refreshFlag changes
+  // Fetch inbox, musiliked tracks, and hidden recommendations on mount and when refreshFlag changes
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -28,6 +29,13 @@ export default function Inbox({ refreshFlag }) {
         setError('Could not load inbox.');
         setLoading(false);
       });
+    // Fetch hidden recommendation ids
+    fetch('/api/hidden-recommendation', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    })
+      .then(res => res.ok ? res.json() : Promise.reject())
+      .then(data => setHiddenIds(data.hiddenIds || []))
+      .catch(() => setHiddenIds([]));
     // Fetch musiliked track ids
     fetch('/api/musiliked', {
       headers: { 'Authorization': 'Bearer ' + token }
@@ -46,19 +54,27 @@ export default function Inbox({ refreshFlag }) {
   if (loading) return <div className="modal-section">Loading inbox...</div>;
   if (error) return <div className="modal-error">{error}</div>;
 
+  // Filter out hidden recommendations
+  function handleHide(recId) {
+    setHiddenIds(ids => [...ids, recId]);
+  }
+  const visibleInbox = inbox.filter(rec => !hiddenIds.includes(rec._id));
+
   return (
     <div className="inbox-container">
       <h2>Your Recommendations Inbox</h2>
-      {inbox.length === 0 ? (
+      {visibleInbox.length === 0 ? (
         <div className="modal-section">No recommendations yet.</div>
       ) : (
         <ul className="inbox-list">
-          {inbox.map(rec => (
+          {visibleInbox.map(rec => (
             <RecommendationCard
               key={rec._id}
               rec={rec}
               musilikedIds={musilikedIds}
               onLikeToggle={handleLikeToggle}
+              hidden={hiddenIds.includes(rec._id)}
+              onHide={handleHide}
             />
           ))}
         </ul>

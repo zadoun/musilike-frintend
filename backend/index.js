@@ -8,6 +8,7 @@ const User = require('./models/User');
 const { searchSpotifyTracks } = require('./spotify');
 const MusilikedController = require('./MusilikedController');
 const RecommendController = require('./RecommendController');
+const HiddenRecommendationController = require('./HiddenRecommendationController');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -128,6 +129,10 @@ app.get('/api/profile', async (req, res) => {
 app.get('/api/users', RecommendController.listUsers);
 app.post('/api/recommend', RecommendController.sendRecommendation);
 app.get('/api/inbox', RecommendController.getInbox);
+
+// Hidden Recommendation endpoints
+app.post('/api/hidden-recommendation', HiddenRecommendationController.hideRecommendation);
+app.get('/api/hidden-recommendation', HiddenRecommendationController.listHiddenRecommendations);
 
 // Musi-Liked endpoints
 app.post('/api/musiliked', MusilikedController.addMusiliked);

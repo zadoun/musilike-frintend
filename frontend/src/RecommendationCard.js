@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import './RecommendationCard.css';
 
-export default function RecommendationCard({ rec, musilikedIds, onLikeToggle }) {
+export default function RecommendationCard({ rec, musilikedIds, onLikeToggle, onHide, hidden }) {
   const [isLiked, setIsLiked] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [folded, setFolded] = useState(false);
 
   useEffect(() => {
     setIsLiked(musilikedIds.includes(rec.track?.id));
@@ -54,9 +56,18 @@ export default function RecommendationCard({ rec, musilikedIds, onLikeToggle }) 
     setLoading(false);
   };
 
-  return (
-    <li className="inbox-item">
+  if (hidden && !folded) {
+    // Animate fold-out
+    setFolded(true);
+    setTimeout(() => onHide && onHide(rec._id), 400); // Remove from DOM after animation
+    return (
+      <li className="inbox-item fold-out" style={{ height: 0, opacity: 0, transition: 'all 0.4s' }}></li>
+    );
+  }
+  if (folded) return null;
 
+  return (
+    <li className={`inbox-item${folded ? ' fold-out' : ''}`}>
       <div className="rec-card-top" style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', gap: 16 }}>
         <div className="rec-card-player">
           <iframe
@@ -133,6 +144,27 @@ export default function RecommendationCard({ rec, musilikedIds, onLikeToggle }) 
             }}
           >
             <span role="img" aria-label="thumb up">👍</span> <span style={{ fontSize: '0.75em' }}>{isLiked ? 'Musi-Liked' : 'Musi-Like'}</span>
+          </button>
+          {/* Trash button below Musi-Like */}
+          <button
+            className="trash-btn"
+            title="Hide this recommendation"
+            style={{ marginTop: 10, color: '#e74c3c', background: 'none', border: 'none', cursor: 'pointer', fontSize: 18 }}
+            onClick={async () => {
+              setFolded(true);
+              setTimeout(() => onHide && onHide(rec._id), 400); // Remove from DOM after animation
+              const token = localStorage.getItem('token');
+              await fetch('/api/hidden-recommendation', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ recommendationId: rec._id })
+              });
+            }}
+          >
+            <span role="img" aria-label="trash">🗑️</span> <span style={{ fontSize: '0.75em' }}>Hide</span>
           </button>
         </div>
       </div>
