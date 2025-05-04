@@ -1,0 +1,46 @@
+.hamburger-menu {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  z-index: 1000;
+}
+.hamburger-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 0.5rem;
+}
+.hamburger-icon span {
+  display: block;
+  width: 28px;
+  height: 4px;
+  background: #B8860B;
+  border-radius: 2px;
+  transition: 0.3s;
+}
+.menu-dropdown {
+  margin-top: 0.5rem;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  padding: 0.5rem 1rem;
+  min-width: 120px;
+}
+.menu-logout {
+  background: none;
+  border: none;
+  color: #c62828;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.5rem 0;
+  width: 100%;
+  text-align: left;
+}
+.menu-logout:hover {
+  text-decoration: underline;
+}
