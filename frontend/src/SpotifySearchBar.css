@@ -116,6 +116,30 @@
 }
 
 /* WhatsApp-style Recommendation Message Bubble */
+.recommend-btn {
+  background: #1db954;
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  padding: 0.27rem 0.78rem;
+  font-size: 0.91rem;
+  font-weight: 700;
+  min-width: 54px;
+  cursor: pointer;
+  margin-bottom: 3px;
+  margin-right: 4px;
+  box-shadow: 0 1px 3px rgba(30,185,84,0.10);
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s, transform 0.13s;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.recommend-btn:hover, .recommend-btn:focus {
+  background: #159b42;
+  color: #fffbe8;
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 4px 16px rgba(30,185,84,0.19);
+}
 .rec-card-message-bubble {
   background: linear-gradient(135deg, #dcf8c6 90%, #ece5dd 100%);
   border-radius: 16px 16px 16px 6px;

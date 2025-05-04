@@ -121,7 +121,7 @@ function SpotifySearchBar({ onResults }) {
                     title="Recommend this song!"
                     onClick={() => { setRecommendTrack(track); setRecommendOpen(true); }}
                   >
-                    <span role="img" aria-label="recommend">📤</span> <span style={{ fontSize: '0.75em' }}>Recommend!</span>
+                    <span role="img" aria-label="music">🎵</span> <span style={{ fontSize: '0.75em' }}>Recommend!</span>
                   </button>
                   <button
                     className={`like-btn ${musilikedIds.includes(track.id) ? 'liked' : 'unliked'}`}

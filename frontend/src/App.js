@@ -131,49 +131,27 @@ function App() {
           <HamburgerMenu onLogout={handleLogout} />
           <h2>Hi {user.username}!</h2>
           <nav style={{marginBottom: 24}}>
-            <button onClick={() => setPage('search')} style={{marginRight:12}}>Spotify Search</button>
-            <button onClick={() => {
-              setPage('inbox');
-              if (inboxBadge > 0) {
-                setToast(`You have ${inboxBadge} new recommendation${inboxBadge > 1 ? 's' : ''} in your inbox!`);
-              }
-              setInboxBadge(0);
-              localStorage.setItem('inboxBadgeCount', '0');
-            }}>
-              Inbox{inboxBadge > 0 && <span style={{
-                display: 'inline-block',
-                marginLeft: 8,
-                background: '#e74c3c',
-                color: '#fff',
-                borderRadius: '50%',
-                width: 22,
-                height: 22,
-                fontSize: 13,
-                lineHeight: '22px',
-                textAlign: 'center',
-                fontWeight: 700
-              }}>{inboxBadge}</span>}
-            </button>
-            <button onClick={() => {
-              setPage('sent');
-              setSentBadge(0);
-              localStorage.setItem('sentBadgeCount', '0');
-            }}>
-              Sent{sentBadge > 0 && <span style={{
-                display: 'inline-block',
-                marginLeft: 8,
-                background: '#e74c3c',
-                color: '#fff',
-                borderRadius: '50%',
-                width: 22,
-                height: 22,
-                fontSize: 13,
-                lineHeight: '22px',
-                textAlign: 'center',
-                fontWeight: 700
-              }}>{sentBadge}</span>}
-            </button>
-          </nav>
+  <div className="top-menu">
+    <button className="topbar-btn" onClick={() => setPage('search')}>Spotify Search</button>
+    <button className="topbar-btn" onClick={() => {
+      setPage('inbox');
+      if (inboxBadge > 0) {
+        setToast(`You have ${inboxBadge} new recommendation${inboxBadge > 1 ? 's' : ''} in your inbox!`);
+      }
+      setInboxBadge(0);
+      localStorage.setItem('inboxBadgeCount', '0');
+    }}>
+      Inbox{inboxBadge > 0 && <span className="badge">{inboxBadge}</span>}
+    </button>
+    <button className="topbar-btn" onClick={() => {
+      setPage('sent');
+      setSentBadge(0);
+      localStorage.setItem('sentBadgeCount', '0');
+    }}>
+      Sent{sentBadge > 0 && <span className="badge">{sentBadge}</span>}
+    </button>
+  </div>
+</nav>
           {page === 'search' && <SpotifySearchBar />}
           {page === 'inbox' && <Inbox userId={user._id} refreshFlag={refreshInboxFlag} />}
           {page === 'sent' && <SentRecommendations userId={user._id} />}
