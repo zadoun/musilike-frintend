@@ -49,6 +49,23 @@ exports.sendRecommendation = async (req, res) => {
       track
     });
     await rec.save();
+    // --- SOCKET.IO NOTIFY RECIPIENT ---
+    try {
+      const { io, userSocketMap } = require('./index');
+      const recipientSocketId = userSocketMap[toUserId];
+      if (recipientSocketId) {
+        io.to(recipientSocketId).emit('new-recommendation', {
+          recommendation: {
+            _id: rec._id,
+            fromUser: { username: fromUser.username, email: fromUser.email, _id: fromUser._id },
+            message,
+            track,
+            createdAt: rec.createdAt
+          }
+        });
+        console.log('Emitted new-recommendation to socket:', recipientSocketId, 'for user:', toUserId);
+      }
+    } catch (e) { /* ignore socket errors for now */ }
     res.status(201).json({ message: 'Recommendation sent!' });
   } catch (err) {
     res.status(500).json({ error: 'Could not send recommendation.' });

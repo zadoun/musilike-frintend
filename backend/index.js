@@ -11,6 +11,41 @@ const RecommendController = require('./RecommendController');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
+
+// --- SOCKET.IO SETUP ---
+const http = require('http').createServer(app);
+const { Server } = require('socket.io');
+const io = new Server(http, {
+  cors: {
+    origin: [
+      'http://localhost:3000',
+      'http://localhost:4000',
+      'https://c7a6-2a01-e0a-1ce-c2b0-d510-ce1d-a858-6585.ngrok-free.app',
+    ],
+    credentials: true,
+  }
+});
+
+// Track connected users by userId
+const userSocketMap = {};
+io.on('connection', (socket) => {
+  // Client should emit 'register' with their userId after connecting
+  socket.on('register', (userId) => {
+    userSocketMap[userId] = socket.id;
+  });
+  socket.on('disconnect', () => {
+    for (const [userId, id] of Object.entries(userSocketMap)) {
+      if (id === socket.id) {
+        delete userSocketMap[userId];
+        break;
+      }
+    }
+  });
+});
+
+module.exports.io = io;
+module.exports.userSocketMap = userSocketMap;
+
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret';
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/musilike_mpv_V5';
 
@@ -83,7 +118,7 @@ app.get('/api/profile', async (req, res) => {
     const decoded = jwt.verify(token, JWT_SECRET);
     const user = await User.findOne({ email: decoded.email });
     if (!user) return res.status(404).json({ error: 'User not found.' });
-    res.json({ email: user.email, username: user.username });
+    res.json({ email: user.email, username: user.username, _id: user._id });
   } catch (err) {
     res.status(401).json({ error: 'Invalid token.' });
   }
@@ -129,6 +164,6 @@ app.get('/api/spotify/search', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
+http.listen(PORT, () => {
   console.log(`Backend running on http://localhost:${PORT}`);
 });

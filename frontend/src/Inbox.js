@@ -2,12 +2,13 @@ import React, { useEffect, useState } from 'react';
 import './SpotifySearchBar.css';
 import RecommendationCard from './RecommendationCard';
 
-export default function Inbox() {
+export default function Inbox({ refreshFlag }) {
   const [inbox, setInbox] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [musilikedIds, setMusilikedIds] = useState([]);
 
+  // Fetch inbox and musiliked tracks on mount and when refreshFlag changes
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -36,7 +37,7 @@ export default function Inbox() {
         setMusilikedIds((data.tracks || []).map(t => t.trackId));
       })
       .catch(() => setMusilikedIds([]));
-  }, []);
+  }, [refreshFlag]);
 
   const handleLikeToggle = (trackId, liked) => {
     setMusilikedIds(ids => liked ? [...ids, trackId] : ids.filter(id => id !== trackId));

@@ -1,18 +1,48 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import Auth from './Auth';
 import HamburgerMenu from './HamburgerMenu';
 import SpotifySearchBar from './SpotifySearchBar';
 import Inbox from './Inbox';
+import { io } from 'socket.io-client';
+
+function Toast({ message, onClose }) {
+  React.useEffect(() => {
+    const timer = setTimeout(onClose, 3500);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+  return (
+    <div style={{
+      position: 'fixed',
+      bottom: 32,
+      right: 32,
+      background: 'rgba(40,180,99,0.95)',
+      color: '#fff',
+      padding: '16px 28px',
+      borderRadius: 10,
+      boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
+      fontSize: '1.12em',
+      zIndex: 9999
+    }}>
+      {message}
+    </div>
+  );
+}
+
 
 function App() {
+  const [toast, setToast] = useState(null);
+  const [inboxBadge, setInboxBadge] = useState(false);
+  const [refreshInboxFlag, setRefreshInboxFlag] = useState(false); // Used to trigger inbox refresh
+
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [page, setPage] = React.useState('search');
+  const socketRef = useRef(null);
 
   // On mount, check for JWT and fetch profile
-  React.useEffect(() => {
+  useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
       setLoading(false);
@@ -28,7 +58,9 @@ function App() {
           return;
         }
         const data = await res.json();
-        setUser({ email: data.email, username: data.username });
+        // Expect backend to return user._id
+        setUser({ email: data.email, username: data.username, _id: data._id });
+        console.log('User object after login:', { email: data.email, username: data.username, _id: data._id });
         setLoading(false);
       })
       .catch(() => {
@@ -42,6 +74,32 @@ function App() {
     setUser(null);
   };
 
+  // Socket.IO connect and event listener
+  useEffect(() => {
+    if (user && user._id) {
+      if (!socketRef.current) {
+        socketRef.current = io('http://localhost:4000', { transports: ['websocket'] });
+        socketRef.current.on('connect', () => {
+          console.log('Socket.IO connected!', socketRef.current.id);
+        });
+      }
+      socketRef.current.emit('register', user._id);
+      socketRef.current.on('new-recommendation', (data) => {
+        console.log('Received new-recommendation event:', data);
+        setToast('You have a new recommendation!');
+        setInboxBadge(true);
+        if (page === 'inbox') {
+          setRefreshInboxFlag(f => !f); // Toggle to trigger refresh
+        }
+      });
+      return () => {
+        if (socketRef.current) {
+          socketRef.current.off('new-recommendation');
+        }
+      };
+    }
+  }, [user]);
+
   if (loading) return <div>Loading...</div>;
 
   return (
@@ -54,12 +112,27 @@ function App() {
           <h2>Hi {user.username}!</h2>
           <nav style={{marginBottom: 24}}>
             <button onClick={() => setPage('search')} style={{marginRight:12}}>Spotify Search</button>
-            <button onClick={() => setPage('inbox')}>Inbox</button>
+            <button onClick={() => { setPage('inbox'); setInboxBadge(false); }}>
+              Inbox{inboxBadge && <span style={{
+                display: 'inline-block',
+                marginLeft: 8,
+                background: '#e74c3c',
+                color: '#fff',
+                borderRadius: '50%',
+                width: 18,
+                height: 18,
+                fontSize: 12,
+                lineHeight: '18px',
+                textAlign: 'center',
+                fontWeight: 700
+              }}>●</span>}
+            </button>
           </nav>
           {page === 'search' && <SpotifySearchBar />}
-          {page === 'inbox' && <Inbox />}
+          {page === 'inbox' && <Inbox userId={user._id} refreshFlag={refreshInboxFlag} />}
         </div>
       )}
+    {toast && <Toast message={toast} onClose={() => setToast(null)} />}
     </div>
   );
 }
