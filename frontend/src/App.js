@@ -4,6 +4,7 @@ import Auth from './Auth';
 import HamburgerMenu from './HamburgerMenu';
 import SpotifySearchBar from './SpotifySearchBar';
 import Inbox from './Inbox';
+import SentRecommendations from './SentRecommendations';
 import { io } from 'socket.io-client';
 
 function Toast({ message, onClose }) {
@@ -112,7 +113,7 @@ function App() {
           <h2>Hi {user.username}!</h2>
           <nav style={{marginBottom: 24}}>
             <button onClick={() => setPage('search')} style={{marginRight:12}}>Spotify Search</button>
-            <button onClick={() => { setPage('inbox'); setInboxBadge(false); }}>
+            <button onClick={() => { setPage('inbox'); setInboxBadge(false); }} style={{marginRight:12}}>
               Inbox{inboxBadge && <span style={{
                 display: 'inline-block',
                 marginLeft: 8,
@@ -127,9 +128,13 @@ function App() {
                 fontWeight: 700
               }}>●</span>}
             </button>
+            <button onClick={() => setPage('sent')}>
+              Sent
+            </button>
           </nav>
           {page === 'search' && <SpotifySearchBar />}
           {page === 'inbox' && <Inbox userId={user._id} refreshFlag={refreshInboxFlag} />}
+          {page === 'sent' && <SentRecommendations userId={user._id} />}
         </div>
       )}
     {toast && <Toast message={toast} onClose={() => setToast(null)} />}

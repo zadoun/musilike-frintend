@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret';
 
 // GET /api/users - List users (for recommendation selection)
-exports.listUsers = async (req, res) => {
+const listUsers = async (req, res) => {
   const auth = req.headers.authorization;
   if (!auth) return res.status(401).json({ error: 'No token provided.' });
   const token = auth.split(' ')[1];
@@ -27,7 +27,7 @@ exports.listUsers = async (req, res) => {
 };
 
 // POST /api/recommend - Send a recommendation
-exports.sendRecommendation = async (req, res) => {
+const sendRecommendation = async (req, res) => {
   const auth = req.headers.authorization;
   if (!auth) return res.status(401).json({ error: 'No token provided.' });
   const token = auth.split(' ')[1];
@@ -49,31 +49,49 @@ exports.sendRecommendation = async (req, res) => {
       track
     });
     await rec.save();
-    // --- SOCKET.IO NOTIFY RECIPIENT ---
-    try {
-      const { io, userSocketMap } = require('./index');
-      const recipientSocketId = userSocketMap[toUserId];
-      if (recipientSocketId) {
-        io.to(recipientSocketId).emit('new-recommendation', {
-          recommendation: {
-            _id: rec._id,
-            fromUser: { username: fromUser.username, email: fromUser.email, _id: fromUser._id },
-            message,
-            track,
-            createdAt: rec.createdAt
-          }
-        });
-        console.log('Emitted new-recommendation to socket:', recipientSocketId, 'for user:', toUserId);
-      }
-    } catch (e) { /* ignore socket errors for now */ }
+    // Optionally emit socket event here...
     res.status(201).json({ message: 'Recommendation sent!' });
   } catch (err) {
     res.status(500).json({ error: 'Could not send recommendation.' });
   }
 };
 
+// POST /api/recommendation/:id/react - React to a recommendation (recipient only)
+const reactToRecommendation = async (req, res) => {
+  const auth = req.headers.authorization;
+  if (!auth) return res.status(401).json({ error: 'No token provided.' });
+  const token = auth.split(' ')[1];
+  let user;
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    user = await User.findOne({ email: decoded.email });
+    if (!user) return res.status(404).json({ error: 'User not found.' });
+  } catch (err) {
+    return res.status(401).json({ error: 'Invalid token.' });
+  }
+  const { id } = req.params;
+  const { emoji, text } = req.body;
+  if (!emoji && !text) return res.status(400).json({ error: 'No reaction provided.' });
+  try {
+    const rec = await Recommendation.findById(id);
+    if (!rec) return res.status(404).json({ error: 'Recommendation not found.' });
+    if (String(rec.toUser) !== String(user._id)) {
+      return res.status(403).json({ error: 'Only the recipient can react.' });
+    }
+    rec.reaction = {
+      emoji: emoji || '',
+      text: text || '',
+      reactedAt: new Date()
+    };
+    await rec.save();
+    res.json({ success: true, reaction: rec.reaction });
+  } catch (err) {
+    res.status(500).json({ error: 'Could not save reaction.' });
+   }
+};
+
 // GET /api/inbox - Get recommendations sent to the logged-in user
-exports.getInbox = async (req, res) => {
+const getInbox = async (req, res) => {
   const auth = req.headers.authorization;
   if (!auth) return res.status(401).json({ error: 'No token provided.' });
   const token = auth.split(' ')[1];
@@ -91,4 +109,33 @@ exports.getInbox = async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: 'Could not fetch inbox.' });
   }
+};
+
+// GET /api/recommendations/sent - Recommendations sent by the logged-in user
+const getSentRecommendations = async (req, res) => {
+  const auth = req.headers.authorization;
+  if (!auth) return res.status(401).json({ error: 'No token provided.' });
+  const token = auth.split(' ')[1];
+  let user;
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    user = await User.findOne({ email: decoded.email });
+    if (!user) return res.status(404).json({ error: 'User not found.' });
+  } catch (err) {
+    return res.status(401).json({ error: 'Invalid token.' });
+  }
+  try {
+    const sent = await Recommendation.find({ fromUser: user._id }).populate('toUser', 'username email');
+    res.json({ sent });
+  } catch (err) {
+    res.status(500).json({ error: 'Could not fetch sent recommendations.' });
+  }
+};
+
+module.exports = {
+  listUsers,
+  sendRecommendation,
+  reactToRecommendation,
+  getInbox,
+  getSentRecommendations
 };

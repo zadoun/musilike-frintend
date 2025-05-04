@@ -129,6 +129,10 @@ app.get('/api/profile', async (req, res) => {
 app.get('/api/users', RecommendController.listUsers);
 app.post('/api/recommend', RecommendController.sendRecommendation);
 app.get('/api/inbox', RecommendController.getInbox);
+app.post('/api/recommendation/:id/react', RecommendController.reactToRecommendation);
+
+// Sent Recommendations endpoint
+app.get('/api/recommendations/sent', RecommendController.getSentRecommendations);
 
 // Hidden Recommendation endpoints
 app.post('/api/hidden-recommendation', HiddenRecommendationController.hideRecommendation);
