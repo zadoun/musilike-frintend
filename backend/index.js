@@ -7,6 +7,7 @@ const mongoose = require('mongoose');
 const User = require('./models/User');
 const { searchSpotifyTracks } = require('./spotify');
 const MusilikedController = require('./MusilikedController');
+const RecommendController = require('./RecommendController');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -87,6 +88,11 @@ app.get('/api/profile', async (req, res) => {
     res.status(401).json({ error: 'Invalid token.' });
   }
 });
+
+// Recommend endpoints
+app.get('/api/users', RecommendController.listUsers);
+app.post('/api/recommend', RecommendController.sendRecommendation);
+app.get('/api/inbox', RecommendController.getInbox);
 
 // Musi-Liked endpoints
 app.post('/api/musiliked', MusilikedController.addMusiliked);

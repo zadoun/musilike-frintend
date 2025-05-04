@@ -3,11 +3,13 @@ import './App.css';
 import Auth from './Auth';
 import HamburgerMenu from './HamburgerMenu';
 import SpotifySearchBar from './SpotifySearchBar';
+import Inbox from './Inbox';
 
 function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [page, setPage] = React.useState('search');
 
   // On mount, check for JWT and fetch profile
   React.useEffect(() => {
@@ -50,7 +52,12 @@ function App() {
         <div style={{ position: 'relative', minHeight: '100vh' }}>
           <HamburgerMenu onLogout={handleLogout} />
           <h2>Hi {user.username}!</h2>
-          <SpotifySearchBar />
+          <nav style={{marginBottom: 24}}>
+            <button onClick={() => setPage('search')} style={{marginRight:12}}>Spotify Search</button>
+            <button onClick={() => setPage('inbox')}>Inbox</button>
+          </nav>
+          {page === 'search' && <SpotifySearchBar />}
+          {page === 'inbox' && <Inbox />}
         </div>
       )}
     </div>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './SpotifySearchBar.css';
+import RecommendModal from './RecommendModal';
 
 function SpotifySearchBar({ onResults }) {
   const [query, setQuery] = useState('');
@@ -7,6 +8,8 @@ function SpotifySearchBar({ onResults }) {
   const [error, setError] = useState('');
   const [results, setResults] = useState([]);
   const [musilikedIds, setMusilikedIds] = useState([]);
+  const [recommendOpen, setRecommendOpen] = useState(false);
+  const [recommendTrack, setRecommendTrack] = useState(null);
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -75,7 +78,14 @@ function SpotifySearchBar({ onResults }) {
   };
 
   return (
-    <div className="spotify-search-bar">
+    <>
+      <RecommendModal
+        open={recommendOpen}
+        onClose={() => setRecommendOpen(false)}
+        track={recommendTrack}
+        onSend={() => setRecommendOpen(false)}
+      />
+      <div className="spotify-search-bar">
       <form onSubmit={handleSearch} className="spotify-search-form">
         <input
           type="text"
@@ -107,18 +117,14 @@ function SpotifySearchBar({ onResults }) {
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginLeft: 12, maxWidth: 120 }}>
                 <button
                   className="recommend-btn"
-                  style={{ marginBottom: 6, padding: '7px 10px', background: '#ffe082', color: '#333', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600, width: '100%' }}
+                  style={{ background: '#e3f2fd', color: '#1976d2', border: '1px solid #90caf9', borderRadius: 6, padding: '2px 6px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85em', marginTop: 4, marginLeft: 8, width: '90px', minWidth: '70px', maxWidth: '120px' }}
                   title="Recommend this song!"
-                  onClick={() => { /* Placeholder for recommend functionality */ }}
+                  onClick={() => { setRecommendTrack(track); setRecommendOpen(true); }}
                 >
-                  Recommend!
+                  <span role="img" aria-label="recommend">📤</span> <span style={{ fontSize: '0.75em' }}>Recommend!</span>
                 </button>
                 <button
-                  className="like-btn"
-                  style={musilikedIds.includes(track.id)
-                    ? { background: '#d7ffd9', color: '#256029', border: '1px solid #4caf50', borderRadius: 6, padding: '2px 6px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85em', marginTop: 4, width: '80px', minWidth: '70px', maxWidth: '100px' }
-                    : { background: '#f5f5f5', color: '#256029', border: '1px solid #4caf50', borderRadius: 6, padding: '2px 6px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85em', marginTop: 4, width: '80px', minWidth: '70px', maxWidth: '100px' }
-                  }
+                  className={`like-btn ${musilikedIds.includes(track.id) ? 'liked' : 'unliked'}`}
                   title={musilikedIds.includes(track.id) ? 'Remove Musi-Like' : 'Musi-Like this song!'}
                   onClick={async () => {
                     const token = localStorage.getItem('token');
@@ -184,6 +190,7 @@ function SpotifySearchBar({ onResults }) {
         </ul>
       )}
     </div>
+    </>
   );
 }
 
