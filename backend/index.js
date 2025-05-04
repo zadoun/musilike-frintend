@@ -5,13 +5,23 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const mongoose = require('mongoose');
 const User = require('./models/User');
+const { searchSpotifyTracks } = require('./spotify');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret';
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/musilike_mpv_V5';
 
-app.use(cors());
+app.use(cors({
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:4000',
+    'https://c7a6-2a01-e0a-1ce-c2b0-d510-ce1d-a858-6585.ngrok-free.app',
+  ],
+  credentials: true,
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 app.use(express.json());
 
 // Connect to MongoDB
@@ -74,6 +84,18 @@ app.get('/api/profile', async (req, res) => {
     res.json({ email: user.email, username: user.username });
   } catch (err) {
     res.status(401).json({ error: 'Invalid token.' });
+  }
+});
+
+// Spotify Search Endpoint
+app.get('/api/spotify/search', async (req, res) => {
+  const q = req.query.q;
+  if (!q) return res.status(400).json({ error: 'Missing query' });
+  try {
+    const tracks = await searchSpotifyTracks(q);
+    res.json({ tracks });
+  } catch (err) {
+    res.status(500).json({ error: 'Spotify search failed' });
   }
 });
 

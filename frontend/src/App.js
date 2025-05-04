@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import './App.css';
 import Auth from './Auth';
 import HamburgerMenu from './HamburgerMenu';
+import SpotifySearchBar from './SpotifySearchBar';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -25,7 +26,7 @@ function App() {
           return;
         }
         const data = await res.json();
-        setUser({ email: data.email });
+        setUser({ email: data.email, username: data.username });
         setLoading(false);
       })
       .catch(() => {
@@ -49,6 +50,7 @@ function App() {
         <div style={{ position: 'relative', minHeight: '100vh' }}>
           <HamburgerMenu onLogout={handleLogout} />
           <h2>Hi {user.username}!</h2>
+          <SpotifySearchBar />
         </div>
       )}
     </div>
