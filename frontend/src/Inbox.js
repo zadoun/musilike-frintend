@@ -51,8 +51,6 @@ export default function Inbox({ refreshFlag }) {
     setMusilikedIds(ids => liked ? [...ids, trackId] : ids.filter(id => id !== trackId));
   };
 
-  if (loading) return <div className="modal-section">Loading inbox...</div>;
-  if (error) return <div className="modal-error">{error}</div>;
 
   // Filter out hidden recommendations
   function handleHide(recId) {
@@ -60,22 +58,44 @@ export default function Inbox({ refreshFlag }) {
   }
   const visibleInbox = inbox.filter(rec => !hiddenIds.includes(rec._id));
 
+  // Track seen recommendations in localStorage
+  const [seenIds, setSeenIds] = React.useState(() => {
+    const stored = localStorage.getItem('seenInboxIds');
+    return stored ? JSON.parse(stored) : [];
+  });
+
+  // Handler to mark a recommendation as seen
+  const markAsSeen = (id) => {
+    if (!seenIds.includes(id)) {
+      const updated = [...seenIds, id];
+      setSeenIds(updated);
+      localStorage.setItem('seenInboxIds', JSON.stringify(updated));
+    }
+  };
+
+  // Sort by most recent (createdAt descending)
+  const sortedInbox = [...visibleInbox].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  if (loading) return <div className="modal-section">Loading inbox...</div>;
+  if (error) return <div className="modal-error">{error}</div>;
+
   return (
     <div className="inbox-container">
       <h2>Your Recommendations Inbox</h2>
-      {visibleInbox.length === 0 ? (
+      {sortedInbox.length === 0 ? (
         <div className="modal-section">No recommendations yet.</div>
       ) : (
         <ul className="inbox-list">
-          {visibleInbox.map(rec => (
-            <RecommendationCard
-              key={rec._id}
-              rec={rec}
-              musilikedIds={musilikedIds}
-              onLikeToggle={handleLikeToggle}
-              hidden={hiddenIds.includes(rec._id)}
-              onHide={handleHide}
-            />
+          {sortedInbox.map(rec => (
+            <li key={rec._id}>
+              <RecommendationCard
+                rec={rec}
+                musilikedIds={musilikedIds}
+                onLikeToggle={handleLikeToggle}
+                hidden={hiddenIds.includes(rec._id)}
+                onHide={handleHide}
+              />
+            </li>
           ))}
         </ul>
       )}

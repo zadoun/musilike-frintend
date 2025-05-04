@@ -134,6 +134,9 @@ function App() {
             <button onClick={() => setPage('search')} style={{marginRight:12}}>Spotify Search</button>
             <button onClick={() => {
               setPage('inbox');
+              if (inboxBadge > 0) {
+                setToast(`You have ${inboxBadge} new recommendation${inboxBadge > 1 ? 's' : ''} in your inbox!`);
+              }
               setInboxBadge(0);
               localStorage.setItem('inboxBadgeCount', '0');
             }}>
