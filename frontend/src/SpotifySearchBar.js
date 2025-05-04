@@ -86,7 +86,9 @@ function SpotifySearchBar({ onResults }) {
         onSend={() => setRecommendOpen(false)}
       />
       <div className="spotify-search-bar">
-        <h2 style={{marginBottom: 32, fontWeight: 600, fontSize: '1.25em', color: '#27ae60'}}>Look for music and recommend it to friends or add it to your favorites !</h2>
+        <div className="search-info-box">
+          Look for music and recommend it to friends<br/>or add it to your favorites !
+        </div>
         <form onSubmit={handleSearch} className="spotify-search-form">
           <input
             type="text"

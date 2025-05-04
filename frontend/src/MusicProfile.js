@@ -42,8 +42,11 @@ export default function MusicProfile() {
                 <div className="music-profile-artist">{t.artists && t.artists.join(', ')}</div>
                 <div className="music-profile-albumname">{t.albumName}</div>
               </div>
-              <a href={t.spotifyUrl} target="_blank" rel="noopener noreferrer" className="music-profile-spotify-link">
-                <img src="/spotify_icon.png" alt="Open in Spotify" />
+              <a href={t.spotifyUrl} target="_blank" rel="noopener noreferrer" className="music-profile-play-btn" title="Play on Spotify">
+                <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="11" cy="11" r="11" fill="none"/>
+                  <polygon points="8,6 16,11 8,16" fill="#fff"/>
+                </svg>
               </a>
             </li>
           ))}

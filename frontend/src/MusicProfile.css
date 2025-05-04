@@ -64,16 +64,37 @@
   font-size: 0.92rem;
   color: #888;
 }
-.music-profile-spotify-link img {
-  width: 28px;
-  height: 28px;
+.music-profile-play-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
   margin-left: 16px;
-  filter: brightness(1.6);
-  transition: filter 0.2s;
+  background: #1db954;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 1.3rem;
+  font-weight: bold;
+  text-decoration: none;
+  box-shadow: 0 1px 4px rgba(30,185,84,0.13);
+  transition: background 0.18s, box-shadow 0.18s, transform 0.13s;
+  border: none;
+  outline: none;
 }
-.music-profile-spotify-link img:hover {
-  filter: brightness(2) saturate(2);
+.music-profile-play-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(30,185,84,0.22);
 }
+
+.music-profile-play-btn:hover, .music-profile-play-btn:focus {
+  background: #159b42;
+  color: #fffbe8;
+  transform: scale(1.09);
+  box-shadow: 0 2px 8px rgba(30,185,84,0.19);
+  outline: none;
+}
+
 .music-profile-empty {
   text-align: center;
   color: #bbb;
