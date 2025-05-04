@@ -1,0 +1,88 @@
+.music-profile-container {
+  max-width: 700px;
+  margin: 2rem auto;
+  background: #181818;
+  border-radius: 16px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.15);
+  padding: 2rem 2.5rem 2.5rem 2.5rem;
+  color: #fff;
+}
+.music-profile-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  letter-spacing: 1px;
+  color: #1db954;
+}
+.music-profile-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.music-profile-track {
+  display: flex;
+  align-items: center;
+  padding: 0.8rem 0;
+  border-bottom: 1px solid #282828;
+  transition: background 0.2s;
+}
+.music-profile-track:last-child {
+  border-bottom: none;
+}
+.music-profile-index {
+  width: 32px;
+  text-align: right;
+  font-size: 1.1rem;
+  opacity: 0.7;
+  margin-right: 16px;
+}
+.music-profile-album {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-right: 18px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.11);
+}
+.music-profile-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.music-profile-trackname {
+  font-size: 1.08rem;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 2px;
+}
+.music-profile-artist {
+  font-size: 0.97rem;
+  color: #b3b3b3;
+  margin-bottom: 2px;
+}
+.music-profile-albumname {
+  font-size: 0.92rem;
+  color: #888;
+}
+.music-profile-spotify-link img {
+  width: 28px;
+  height: 28px;
+  margin-left: 16px;
+  filter: brightness(1.6);
+  transition: filter 0.2s;
+}
+.music-profile-spotify-link img:hover {
+  filter: brightness(2) saturate(2);
+}
+.music-profile-empty {
+  text-align: center;
+  color: #bbb;
+  font-size: 1.11rem;
+  margin-top: 2.5rem;
+}
+.music-profile-loading, .music-profile-error {
+  text-align: center;
+  margin: 2rem 0;
+  color: #ffb300;
+  font-size: 1.1rem;
+}
