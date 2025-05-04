@@ -33,8 +33,15 @@ function Toast({ message, onClose }) {
 
 function App() {
   const [toast, setToast] = useState(null);
-  const [inboxBadge, setInboxBadge] = useState(false);
+  const [inboxBadge, setInboxBadge] = useState(() => {
+    const stored = localStorage.getItem('inboxBadgeCount');
+    return stored ? parseInt(stored, 10) : 0;
+  });
   const [refreshInboxFlag, setRefreshInboxFlag] = useState(false); // Used to trigger inbox refresh
+  const [sentBadge, setSentBadge] = useState(() => {
+    const stored = localStorage.getItem('sentBadgeCount');
+    return stored ? parseInt(stored, 10) : 0;
+  });
 
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -79,23 +86,35 @@ function App() {
   useEffect(() => {
     if (user && user._id) {
       if (!socketRef.current) {
-        socketRef.current = io('http://localhost:4000', { transports: ['websocket'] });
+        socketRef.current = io('http://localhost:4000', { transports: ['websocket', 'polling'] });
         socketRef.current.on('connect', () => {
           console.log('Socket.IO connected!', socketRef.current.id);
         });
       }
+      console.log('Registering socket with userId', user._id);
       socketRef.current.emit('register', user._id);
       socketRef.current.on('new-recommendation', (data) => {
         console.log('Received new-recommendation event:', data);
-        setToast('You have a new recommendation!');
-        setInboxBadge(true);
-        if (page === 'inbox') {
-          setRefreshInboxFlag(f => !f); // Toggle to trigger refresh
-        }
+        setInboxBadge(prev => {
+          const next = (prev || 0) + 1;
+          localStorage.setItem('inboxBadgeCount', next);
+          return next;
+        });
+        setToast(`New recommendation from ${data.fromUser}${data.track ? ': ' + data.track.name : ''}!`);
+        setRefreshInboxFlag(f => !f); // Toggle to trigger refresh
+      });
+      socketRef.current.on('recommendation-reacted', (data) => {
+        setToast('Your recommendation just got a reaction!');
+        setSentBadge(prev => {
+          const next = (prev || 0) + 1;
+          localStorage.setItem('sentBadgeCount', next);
+          return next;
+        });
       });
       return () => {
         if (socketRef.current) {
           socketRef.current.off('new-recommendation');
+          socketRef.current.off('recommendation-reacted');
         }
       };
     }
@@ -113,23 +132,43 @@ function App() {
           <h2>Hi {user.username}!</h2>
           <nav style={{marginBottom: 24}}>
             <button onClick={() => setPage('search')} style={{marginRight:12}}>Spotify Search</button>
-            <button onClick={() => { setPage('inbox'); setInboxBadge(false); }} style={{marginRight:12}}>
-              Inbox{inboxBadge && <span style={{
+            <button onClick={() => {
+              setPage('inbox');
+              setInboxBadge(0);
+              localStorage.setItem('inboxBadgeCount', '0');
+            }}>
+              Inbox{inboxBadge > 0 && <span style={{
                 display: 'inline-block',
                 marginLeft: 8,
                 background: '#e74c3c',
                 color: '#fff',
                 borderRadius: '50%',
-                width: 18,
-                height: 18,
-                fontSize: 12,
-                lineHeight: '18px',
+                width: 22,
+                height: 22,
+                fontSize: 13,
+                lineHeight: '22px',
                 textAlign: 'center',
                 fontWeight: 700
-              }}>●</span>}
+              }}>{inboxBadge}</span>}
             </button>
-            <button onClick={() => setPage('sent')}>
-              Sent
+            <button onClick={() => {
+              setPage('sent');
+              setSentBadge(0);
+              localStorage.setItem('sentBadgeCount', '0');
+            }}>
+              Sent{sentBadge > 0 && <span style={{
+                display: 'inline-block',
+                marginLeft: 8,
+                background: '#e74c3c',
+                color: '#fff',
+                borderRadius: '50%',
+                width: 22,
+                height: 22,
+                fontSize: 13,
+                lineHeight: '22px',
+                textAlign: 'center',
+                fontWeight: 700
+              }}>{sentBadge}</span>}
             </button>
           </nav>
           {page === 'search' && <SpotifySearchBar />}

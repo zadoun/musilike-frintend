@@ -31,11 +31,14 @@ export default function SentRecommendations({ userId }) {
   if (error) return <div style={{color: 'red'}}>{error}</div>;
   if (!sent.length) return <div>No sent recommendations yet.</div>;
 
+  // Sort by most recent (createdAt descending)
+  const sorted = [...sent].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
   return (
     <div>
       <h3>Sent Recommendations</h3>
       <ul style={{ listStyle: 'none', padding: 0 }}>
-        {sent.map(rec => (
+        {sorted.map(rec => (
           <li key={rec._id} style={{ marginBottom: 24, border: '1px solid #eee', borderRadius: 10, padding: 16, background: '#f9f9f9' }}>
             <div style={{ fontWeight: 600, fontSize: '1.08em' }}>
               To: {rec.toUser?.username || rec.toUser?.email || 'Unknown'}

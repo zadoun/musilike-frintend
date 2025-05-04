@@ -33,6 +33,7 @@ io.on('connection', (socket) => {
   // Client should emit 'register' with their userId after connecting
   socket.on('register', (userId) => {
     userSocketMap[userId] = socket.id;
+    console.log('Registered socket for user:', userId, 'socket:', socket.id);
   });
   socket.on('disconnect', () => {
     for (const [userId, id] of Object.entries(userSocketMap)) {

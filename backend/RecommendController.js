@@ -49,7 +49,23 @@ const sendRecommendation = async (req, res) => {
       track
     });
     await rec.save();
-    // Optionally emit socket event here...
+    // Emit socket event to recipient if connected
+    try {
+      const { io, userSocketMap } = require('./index');
+      if (userSocketMap[toUserId]) {
+        io.to(userSocketMap[toUserId]).emit('new-recommendation', {
+          recommendationId: rec._id,
+          fromUser: fromUser.username || fromUser.email,
+          message,
+          track
+        });
+        console.log('Emitted new-recommendation to', toUserId);
+      } else {
+        console.log('No socket found for recipient:', toUserId);
+      }
+    } catch (e) {
+      console.log('Socket emit error:', e);
+    }
     res.status(201).json({ message: 'Recommendation sent!' });
   } catch (err) {
     res.status(500).json({ error: 'Could not send recommendation.' });
@@ -84,6 +100,35 @@ const reactToRecommendation = async (req, res) => {
       reactedAt: new Date()
     };
     await rec.save();
+
+    // Ensure fromUser is populated
+    let senderId;
+    try {
+      if (!rec.fromUser.username && rec.populate) {
+        await rec.populate('fromUser', 'username email');
+      }
+      senderId = rec.fromUser?._id?.toString() || rec.fromUser?.toString();
+    } catch (e) {
+      console.log('Error populating fromUser:', e);
+    }
+
+    // Notify sender in real-time if connected
+    try {
+      const { io, userSocketMap } = require('./index');
+      console.log('Attempting to notify sender:', senderId, 'userSocketMap:', userSocketMap);
+      if (senderId && userSocketMap[senderId]) {
+        io.to(userSocketMap[senderId]).emit('recommendation-reacted', {
+          recommendationId: rec._id,
+          reaction: rec.reaction
+        });
+        console.log('Emitted recommendation-reacted to', senderId);
+      } else {
+        console.log('No socket found for sender:', senderId);
+      }
+    } catch (e) {
+      console.log('Socket emit error:', e);
+    }
+
     res.json({ success: true, reaction: rec.reaction });
   } catch (err) {
     res.status(500).json({ error: 'Could not save reaction.' });
