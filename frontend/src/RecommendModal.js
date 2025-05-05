@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './SpotifySearchBar.css';
 import API_URL from './api';
+console.log('API_URL:', API_URL);
 
 export default function RecommendModal({ open, onClose, track, onSend }) {
   const [users, setUsers] = useState([]);
