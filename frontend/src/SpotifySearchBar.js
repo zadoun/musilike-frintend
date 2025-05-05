@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import API_URL from './api';
 import './SpotifySearchBar.css';
 import RecommendModal from './RecommendModal';
 
@@ -19,7 +20,7 @@ function SpotifySearchBar({ onResults }) {
     setResults([]);
     try {
       // TODO: Replace the following with your backend endpoint for Spotify search
-      const res = await fetch('/api/spotify/search?q=' + encodeURIComponent(query));
+      const res = await fetch(`${API_URL}/api/spotify/search?q=` + encodeURIComponent(query));
       let text = await res.text();
       if (!res.ok) {
         console.error('Spotify search failed:', res.status, text);
@@ -50,7 +51,7 @@ function SpotifySearchBar({ onResults }) {
       const token = localStorage.getItem('token');
       if (!token) return;
       try {
-        const res = await fetch('/api/musiliked', {
+        const res = await fetch(`${API_URL}/api/musiliked`, {
           headers: { 'Authorization': 'Bearer ' + token }
         });
         if (res.ok) {
@@ -67,7 +68,7 @@ function SpotifySearchBar({ onResults }) {
     const token = localStorage.getItem('token');
     if (!token) return;
     try {
-      const res = await fetch('/api/musiliked', {
+      const res = await fetch(`${API_URL}/api/musiliked`, {
         headers: { 'Authorization': 'Bearer ' + token }
       });
       if (res.ok) {
@@ -137,7 +138,7 @@ function SpotifySearchBar({ onResults }) {
                       try {
                         if (!musilikedIds.includes(track.id)) {
                           // Like
-                          const res = await fetch('/api/musiliked', {
+                          const res = await fetch(`${API_URL}/api/musiliked`, {
                             method: 'POST',
                             headers: {
                               'Content-Type': 'application/json',
@@ -161,7 +162,7 @@ function SpotifySearchBar({ onResults }) {
                           }
                         } else {
                           // Unlike
-                          const res = await fetch(`/api/musiliked/${track.id}`, {
+                          const res = await fetch(`${API_URL}/api/musiliked/${track.id}`, {
                             method: 'DELETE',
                             headers: {
                               'Authorization': 'Bearer ' + token,

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import API_URL from './api';
 
 export default function SentRecommendations({ userId }) {
   const [sent, setSent] = useState([]);
@@ -8,7 +9,7 @@ export default function SentRecommendations({ userId }) {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) return;
-    fetch('http://localhost:4000/api/recommendations/sent', {
+    fetch(`${API_URL}/api/recommendations/sent`, {
       headers: { 'Authorization': 'Bearer ' + token }
     })
       .then(async res => {

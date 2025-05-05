@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './Auth.css';
+import API_URL from './api';
 
 function Auth({ onAuth }) {
   const [isLogin, setIsLogin] = useState(true);
@@ -21,12 +22,11 @@ function Auth({ onAuth }) {
       const body = isLogin
         ? { email, password }
         : { email, password, username };
-      const res = await fetch(`http://localhost:4000${endpoint}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body)
-        });
+      const res = await fetch(`${API_URL}${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || 'Authentication failed.');

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import API_URL from './api';
 import './SpotifySearchBar.css';
 import RecommendationCard from './RecommendationCard';
 
@@ -17,7 +18,7 @@ export default function Inbox({ refreshFlag }) {
       setLoading(false);
       return;
     }
-    fetch('/api/inbox', {
+    fetch(`${API_URL}/api/inbox`, {
       headers: { 'Authorization': 'Bearer ' + token }
     })
       .then(res => res.ok ? res.json() : Promise.reject())

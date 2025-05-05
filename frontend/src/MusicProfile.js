@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import API_URL from './api';
 import './MusicProfile.css';
 
 export default function MusicProfile() {
@@ -9,7 +10,7 @@ export default function MusicProfile() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) return setError('Please log in to view your music profile.');
-    fetch('/api/musiliked', {
+    fetch(`${API_URL}/api/musiliked`, {
       headers: { 'Authorization': 'Bearer ' + token }
     })
       .then(res => res.ok ? res.json() : Promise.reject())
