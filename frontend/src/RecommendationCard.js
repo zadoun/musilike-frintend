@@ -56,7 +56,7 @@ export default function RecommendationCard({ rec, musilikedIds, onLikeToggle, on
     try {
       if (!isLiked) {
         // Like
-        const res = await fetch('/api/musiliked', {
+        const res = await fetch(`${API_URL}/api/musiliked`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -78,7 +78,7 @@ export default function RecommendationCard({ rec, musilikedIds, onLikeToggle, on
         }
       } else {
         // Unlike
-        const res = await fetch(`/api/musiliked/${rec.track.id}`, {
+        const res = await fetch(`${API_URL}/api/musiliked/${rec.track.id}`, {
           method: 'DELETE',
           headers: {
             'Authorization': 'Bearer ' + token,
@@ -132,7 +132,7 @@ export default function RecommendationCard({ rec, musilikedIds, onLikeToggle, on
               try {
                 if (!isLiked) {
                   // Like
-                  const res = await fetch('/api/musiliked', {
+                  const res = await fetch(`${API_URL}/api/musiliked`, {
                     method: 'POST',
                     headers: {
                       'Content-Type': 'application/json',
@@ -157,7 +157,7 @@ export default function RecommendationCard({ rec, musilikedIds, onLikeToggle, on
                   }
                 } else {
                   // Unlike
-                  const res = await fetch(`/api/musiliked/${rec.track.id}`, {
+                  const res = await fetch(`${API_URL}/api/musiliked/${rec.track.id}`, {
                     method: 'DELETE',
                     headers: {
                       'Authorization': 'Bearer ' + token,
