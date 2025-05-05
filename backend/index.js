@@ -55,7 +55,7 @@ app.use(cors({
   origin: [
     'http://localhost:3000',
     'http://localhost:4000',
-    'https://c7a6-2a01-e0a-1ce-c2b0-d510-ce1d-a858-6585.ngrok-free.app',
+    'https://musilike-frintend.vercel.app', // <-- your Vercel frontend URL
   ],
   credentials: true,
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
