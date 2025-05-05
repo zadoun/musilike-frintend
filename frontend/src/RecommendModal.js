@@ -68,7 +68,7 @@ export default function RecommendModal({ open, onClose, track, onSend }) {
             setError('');
             const token = localStorage.getItem('token');
             try {
-              const res = await fetch('/api/recommend', {
+              const res = await fetch(`${API_URL}/api/recommend`, {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
