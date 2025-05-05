@@ -21,7 +21,7 @@ export default function RecommendationCard({ rec, musilikedIds, onLikeToggle, on
       return;
     }
     try {
-      const res = await fetch(`/api/recommendation/${rec._id}/react`, {
+      const res = await fetch(`${API_URL}/api/recommendation/${rec._id}/react`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
