@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './RecommendationCard.css';
+import API_URL from './api';
 
 export default function RecommendationCard({ rec, musilikedIds, onLikeToggle, onHide, hidden }) {
   // Reaction state for recipient
