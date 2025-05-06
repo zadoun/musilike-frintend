@@ -15,7 +15,7 @@ export default function RecommendModal({ open, onClose, track, onSend }) {
       // Fetch user list for recommendation
       const token = localStorage.getItem('token');
       if (!token) return;
-      fetch(`${API_URL}/api/users`, {
+      fetch('/api/users', {
         headers: { 'Authorization': 'Bearer ' + token }
       })
         .then(res => res.ok ? res.json() : Promise.reject())

@@ -22,7 +22,7 @@ function Auth({ onAuth }) {
       const body = isLogin
         ? { email, password }
         : { email, password, username };
-      const res = await fetch(`${API_URL}${endpoint}`, {
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)

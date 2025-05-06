@@ -18,7 +18,7 @@ export default function Inbox({ refreshFlag }) {
       setLoading(false);
       return;
     }
-    fetch(`${API_URL}/api/inbox`, {
+    fetch('/api/inbox', {
       headers: { 'Authorization': 'Bearer ' + token }
     })
       .then(res => res.ok ? res.json() : Promise.reject())
@@ -48,10 +48,57 @@ export default function Inbox({ refreshFlag }) {
       .catch(() => setMusilikedIds([]));
   }, [refreshFlag]);
 
-  const handleLikeToggle = (trackId, liked) => {
-    setMusilikedIds(ids => liked ? [...ids, trackId] : ids.filter(id => id !== trackId));
+  const refreshMusilikedIds = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    try {
+      const res = await fetch('/api/musiliked', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setMusilikedIds((data.tracks || []).map(t => t.trackId));
+      }
+    } catch {}
   };
 
+  const handleLikeToggle = async (trackId, liked) => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    try {
+      if (liked) {
+        // Like
+        const res = await fetch('/api/musiliked', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token,
+          },
+          body: JSON.stringify({ trackId })
+        });
+        if (!res.ok) {
+          const data = await res.json();
+          if (data.error && data.error.toLowerCase().includes('already musi-liked')) {
+            refreshMusilikedIds();
+            return;
+          } else {
+            alert('Error: ' + (data.error || 'Could not like track.'));
+          }
+        }
+      } else {
+        // Unlike
+        await fetch(`/api/musiliked/${trackId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': 'Bearer ' + token,
+          },
+        });
+      }
+    } catch (err) {
+      // Optionally show error/toast here
+    }
+    refreshMusilikedIds();
+  };
 
   // Filter out hidden recommendations
   function handleHide(recId) {
@@ -93,6 +140,7 @@ export default function Inbox({ refreshFlag }) {
                 rec={rec}
                 musilikedIds={musilikedIds}
                 onLikeToggle={handleLikeToggle}
+                onRefreshMusilikedIds={refreshMusilikedIds}
                 hidden={hiddenIds.includes(rec._id)}
                 onHide={handleHide}
               />

@@ -190,6 +190,6 @@ app.get('/api/spotify/search', async (req, res) => {
   }
 });
 
-http.listen(PORT, '0.0.0.0', () => {
-  console.log(`Backend running on http://0.0.0.0:${PORT}`);
+http.listen(PORT, 'localhost', () => {
+  console.log(`Backend running on http://localhost:${PORT}`);
 });

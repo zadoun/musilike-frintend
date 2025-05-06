@@ -10,7 +10,7 @@ export default function MusicProfile() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) return setError('Please log in to view your music profile.');
-    fetch(`${API_URL}/api/musiliked`, {
+    fetch('/api/musiliked', {
       headers: { 'Authorization': 'Bearer ' + token }
     })
       .then(res => res.ok ? res.json() : Promise.reject())
