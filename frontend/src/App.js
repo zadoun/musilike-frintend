@@ -7,6 +7,7 @@ import Inbox from './Inbox';
 import SentRecommendations from './SentRecommendations';
 import MusicProfile from './MusicProfile';
 import { io } from 'socket.io-client';
+import API_URL from './api';
 
 function Toast({ message, onClose }) {
   React.useEffect(() => {
@@ -31,11 +32,6 @@ function Toast({ message, onClose }) {
   );
 }
 
-
-import API_URL from './api';
-import React, { useState, useEffect, useRef } from 'react';
-import { io } from 'socket.io-client';
-// ...other imports...
 
 function App() {
   const [toast, setToast] = useState(null);
