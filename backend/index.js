@@ -55,6 +55,7 @@ app.use(cors({
   origin: [
     'http://localhost:3000',
     'http://localhost:4000',
+    'http://192.168.1.72:3000', // <-- Added local network frontend for mobile access
     'https://musilike-frintend.vercel.app', // <-- your Vercel frontend URL
   ],
   credentials: true,
@@ -126,6 +127,21 @@ app.get('/api/profile', async (req, res) => {
   }
 });
 
+// Profile endpoint for current user
+app.get('/api/profile', async (req, res) => {
+  const auth = req.headers.authorization;
+  if (!auth) return res.status(401).json({ error: 'No token provided.' });
+  const token = auth.split(' ')[1];
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev_secret');
+    const user = await User.findOne({ email: decoded.email });
+    if (!user) return res.status(404).json({ error: 'User not found.' });
+    res.json({ email: user.email, username: user.username, _id: user._id });
+  } catch (err) {
+    res.status(401).json({ error: 'Invalid token.' });
+  }
+});
+
 // Recommend endpoints
 app.get('/api/users', RecommendController.listUsers);
 app.post('/api/recommend', RecommendController.sendRecommendation);
@@ -174,6 +190,6 @@ app.get('/api/spotify/search', async (req, res) => {
   }
 });
 
-http.listen(PORT, () => {
-  console.log(`Backend running on http://localhost:${PORT}`);
+http.listen(PORT, '0.0.0.0', () => {
+  console.log(`Backend running on http://0.0.0.0:${PORT}`);
 });
