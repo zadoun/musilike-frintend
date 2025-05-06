@@ -16,7 +16,7 @@ if (!API_URL) {
     API_URL = `http://${hostname}:4000`; // Local LAN/mobile
   } else {
     // Fallback: Use your Render backend for production
-    API_URL = 'https://your-render-backend-url.onrender.com';
+    API_URL = 'https://musilike-frintend.onrender.com';
   }
 }
 
