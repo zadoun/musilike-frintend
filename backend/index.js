@@ -190,6 +190,20 @@ app.get('/api/spotify/search', async (req, res) => {
   }
 });
 
-http.listen(PORT, 'localhost', () => {
-  console.log(`Backend running on http://localhost:${PORT}`);
+// Choose host: 'localhost' for desktop-only dev, '0.0.0.0' for LAN/mobile/local network, or override with HOST env
+let HOST;
+if (process.env.HOST) {
+  HOST = process.env.HOST;
+} else if (process.env.NODE_ENV === 'production') {
+  HOST = '0.0.0.0';
+} else if (process.env.LOCAL_LAN === 'true') {
+  HOST = '0.0.0.0';
+} else {
+  HOST = 'localhost';
+}
+http.listen(PORT, HOST, () => {
+  console.log(`Backend running on http://${HOST === '0.0.0.0' ? 'your-local-ip' : HOST}:${PORT}`);
+  if (HOST === '0.0.0.0') {
+    console.log('For mobile/local network testing, use your local IP address (e.g., http://192.168.x.x:4000) in your frontend or device browser.');
+  }
 });
