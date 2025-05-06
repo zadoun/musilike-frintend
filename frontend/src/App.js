@@ -32,6 +32,10 @@ function Toast({ message, onClose }) {
 }
 
 
+import API_URL from './api';
+
+// ...other imports...
+
 function App() {
   const [toast, setToast] = useState(null);
   const [inboxBadge, setInboxBadge] = useState(() => {
@@ -57,7 +61,7 @@ function App() {
       setLoading(false);
       return;
     }
-    fetch('http://localhost:4000/api/profile', {
+    fetch(`${API_URL}/api/profile`, {
       headers: { 'Authorization': 'Bearer ' + token }
     })
       .then(async res => {
@@ -87,7 +91,7 @@ function App() {
   useEffect(() => {
     if (user && user._id) {
       if (!socketRef.current) {
-        socketRef.current = io('http://localhost:4000', { transports: ['websocket', 'polling'] });
+        socketRef.current = io(API_URL, { transports: ['websocket', 'polling'] });
         socketRef.current.on('connect', () => {
           console.log('Socket.IO connected!', socketRef.current.id);
         });
