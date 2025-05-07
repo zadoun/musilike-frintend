@@ -138,7 +138,7 @@ function SpotifySearchBar({ onResults }) {
                       try {
                         if (!musilikedIds.includes(track.id)) {
                           // Like
-                          const res = await fetch('/api/musiliked', {
+                          const res = await fetch(`${API_URL}/api/musiliked`, {
                             method: 'POST',
                             headers: {
                               'Content-Type': 'application/json',
