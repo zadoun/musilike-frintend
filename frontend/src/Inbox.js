@@ -62,7 +62,7 @@ export default function Inbox({ refreshFlag }) {
     } catch {}
   };
 
-  const handleLikeToggle = async (trackId, liked) => {
+  const handleLikeToggle = async (track, liked) => {
     const token = localStorage.getItem('token');
     if (!token) return;
     try {
@@ -74,7 +74,15 @@ export default function Inbox({ refreshFlag }) {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer ' + token,
           },
-          body: JSON.stringify({ trackId })
+          body: JSON.stringify({
+            trackId: track.id,
+            trackName: track.name,
+            artists: track.artists ? track.artists.map(a => a.name) : [],
+            albumName: track.album ? track.album.name : '',
+            albumImage: track.album && track.album.images && track.album.images[0] ? track.album.images[0].url : '',
+            spotifyUrl: track.external_urls ? track.external_urls.spotify : '',
+            rawTrack: track,
+          }),
         });
         if (!res.ok) {
           const data = await res.json();

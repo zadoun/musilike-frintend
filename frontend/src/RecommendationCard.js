@@ -47,7 +47,7 @@ export default function RecommendationCard({ rec, musilikedIds, onLikeToggle, on
   const handleLike = () => {
     if (!rec.track) return;
     const isLiked = musilikedIds.includes(rec.track.id);
-    onLikeToggle && onLikeToggle(rec.track.id, !isLiked);
+    onLikeToggle && onLikeToggle(rec.track, !isLiked);
   }
 
   if (hidden && !folded) {
@@ -82,7 +82,7 @@ export default function RecommendationCard({ rec, musilikedIds, onLikeToggle, on
             onClick={() => {
               if (!rec.track) return;
               const isLiked = musilikedIds.includes(rec.track.id);
-              onLikeToggle && onLikeToggle(rec.track.id, !isLiked);
+              onLikeToggle && onLikeToggle(rec.track, !isLiked);
             }}
           >
             <span role="img" aria-label="thumb up">👍</span> <span style={{ fontSize: '0.75em' }}>{musilikedIds.includes(rec.track?.id) ? 'Musi-Liked' : 'Musi-Like'}</span>
