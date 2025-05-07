@@ -20,7 +20,7 @@ function SpotifySearchBar({ onResults }) {
     setResults([]);
     try {
       // TODO: Replace the following with your backend endpoint for Spotify search
-      const res = await fetch('/api/spotify/search?q=' + encodeURIComponent(query));
+      const res = await fetch(`${API_URL}/api/spotify/search?q=` + encodeURIComponent(query));
       let text = await res.text();
       if (!res.ok) {
         console.error('Spotify search failed:', res.status, text);

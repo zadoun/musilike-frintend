@@ -9,7 +9,7 @@ export default function SentRecommendations({ userId }) {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) return;
-    fetch('/api/recommendations/sent', {
+    fetch(`${API_URL}/api/recommendations/sent`, {
       headers: { 'Authorization': 'Bearer ' + token }
     })
       .then(async res => {

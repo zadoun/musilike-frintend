@@ -18,7 +18,7 @@ export default function Inbox({ refreshFlag }) {
       setLoading(false);
       return;
     }
-    fetch('/api/inbox', {
+    fetch(`${API_URL}/api/inbox`, {
       headers: { 'Authorization': 'Bearer ' + token }
     })
       .then(res => res.ok ? res.json() : Promise.reject())
@@ -87,7 +87,7 @@ export default function Inbox({ refreshFlag }) {
         }
       } else {
         // Unlike
-        await fetch(`/api/musiliked/${trackId}`, {
+        await fetch(`${API_URL}/api/musiliked/${trackId}`, {
           method: 'DELETE',
           headers: {
             'Authorization': 'Bearer ' + token,
