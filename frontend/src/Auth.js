@@ -18,7 +18,7 @@ function Auth({ onAuth }) {
     }
     setError('');
     try {
-      const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+      const endpoint = isLogin ? `${API_URL}/api/auth/login` : `${API_URL}/api/auth/register`;
       const body = isLogin
         ? { email, password }
         : { email, password, username };
