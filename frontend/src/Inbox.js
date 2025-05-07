@@ -95,7 +95,7 @@ export default function Inbox({ refreshFlag }) {
         }
       } else {
         // Unlike
-        await fetch(`${API_URL}/api/musiliked/${trackId}`, {
+        await fetch(`${API_URL}/api/musiliked/${track.id}`, {
           method: 'DELETE',
           headers: {
             'Authorization': 'Bearer ' + token,
