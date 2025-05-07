@@ -31,14 +31,14 @@ export default function Inbox({ refreshFlag }) {
         setLoading(false);
       });
     // Fetch hidden recommendation ids
-    fetch('/api/hidden-recommendation', {
+    fetch(`${API_URL}/api/hidden-recommendation`, {
       headers: { 'Authorization': 'Bearer ' + token }
     })
       .then(res => res.ok ? res.json() : Promise.reject())
       .then(data => setHiddenIds(data.hiddenIds || []))
       .catch(() => setHiddenIds([]));
     // Fetch musiliked track ids
-    fetch('/api/musiliked', {
+    fetch(`${API_URL}/api/musiliked`, {
       headers: { 'Authorization': 'Bearer ' + token }
     })
       .then(res => res.ok ? res.json() : Promise.reject())
@@ -52,7 +52,7 @@ export default function Inbox({ refreshFlag }) {
     const token = localStorage.getItem('token');
     if (!token) return;
     try {
-      const res = await fetch('/api/musiliked', {
+      const res = await fetch(`${API_URL}/api/musiliked`, {
         headers: { 'Authorization': 'Bearer ' + token }
       });
       if (res.ok) {
@@ -68,7 +68,7 @@ export default function Inbox({ refreshFlag }) {
     try {
       if (liked) {
         // Like
-        const res = await fetch('/api/musiliked', {
+        const res = await fetch(`${API_URL}/api/musiliked`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
