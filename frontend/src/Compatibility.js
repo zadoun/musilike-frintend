@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import API_URL from './api';
 import './MusicProfile.css';
 
+import CompatibilityModal from './CompatibilityModal';
+import RecommendationsModal from './RecommendationsModal';
+
 export default function Compatibility({ currentUserId }) {
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState('');
@@ -17,6 +20,12 @@ export default function Compatibility({ currentUserId }) {
   const [reverseError, setReverseError] = useState('');
   // Last liked track for selected user
   const [selectedUserLastTrack, setSelectedUserLastTrack] = useState(null);
+  // Modal for compatibility details
+  const [showModal, setShowModal] = useState(false);
+  // Modal for recommendations
+  const [showRecModal, setShowRecModal] = useState(false);
+  // Modal for reverse recommendations
+  const [showReverseRecModal, setShowReverseRecModal] = useState(false);
 
   // Fetch all users except self
   useEffect(() => {
@@ -136,85 +145,68 @@ export default function Compatibility({ currentUserId }) {
             }
             return null;
           })()}
-          <div style={{ fontSize: '1.22em', fontWeight: 600, marginBottom: 10 }}>
-            Compatibility Score: <span style={{ color: '#1db954' }}>{(result.scores.weightedScore * 100).toFixed(1)}%</span>
+          <div
+            style={{
+              fontSize: '1.22em', fontWeight: 600, marginBottom: 10, cursor: 'pointer',
+              border: '2px solid #1db954', borderRadius: 8, padding: '8px 16px', display: 'inline-block', background: '#fff', transition: 'background 0.2s',
+            }}
+            onClick={() => setShowModal(true)}
+            title="Click for compatibility details"
+            onMouseOver={e => e.currentTarget.style.background = '#eafbee'}
+            onMouseOut={e => e.currentTarget.style.background = '#fff'}
+          >
+            <span style={{ color: '#1db954' }}>Compatibility Score:</span> <span style={{ color: '#1db954' }}>{(result.scores.weightedScore * 100).toFixed(1)}%</span>
           </div>
-          <div style={{ marginBottom: 8 }}>
-            <b>Tracks:</b> {result.count.sharedTracks} shared
-            <br />
-            <b>Artists:</b> {result.count.sharedArtists} shared
-            <br />
-            <b>Genres:</b> {result.count.sharedGenres} shared
-          </div>
-          <div style={{ margin: '10px 0 6px 0', color: '#888' }}>
-            <small>Weights: Track {Math.round(result.scores.weights.track*100)}% | Artist {Math.round(result.scores.weights.artist*100)}% | Genre {Math.round(result.scores.weights.genre*100)}%</small>
-          </div>
-          <div style={{ marginTop: 12 }}>
-            {result.sharedTracks.length > 0 && (
-              <div style={{ marginBottom: 8 }}>
-                <b>Shared Tracks:</b>
-                <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
-                  {result.sharedTracks.map(t => (
-                    <li key={t.trackId} style={{ marginBottom: 4 }}>{t.trackName} <span style={{ color: '#888', fontSize: '0.95em' }}>({(t.artists||[]).join(', ')})</span></li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {result.sharedArtists.length > 0 && (
-              <div style={{ marginBottom: 8 }}>
-                <b>Shared Artists:</b> {result.sharedArtists.join(', ')}
-              </div>
-            )}
-            {result.sharedGenres.length > 0 && (
-              <div style={{ marginBottom: 8 }}>
-                <b>Shared Genres:</b> {result.sharedGenres.join(', ')}
-              </div>
-            )}
-          </div>
+          <CompatibilityModal
+            open={showModal}
+            onClose={() => setShowModal(false)}
+            result={result}
+            users={users}
+            selectedUser={selectedUser}
+          />
           <div style={{ marginTop: 24 }}>
-            <b>Recommended Tracks for you from list of {users.find(u => u._id === selectedUser)?.username || 'selected user'}:</b>
+            <b
+              style={{
+                cursor: recommendations.length > 0 ? 'pointer' : 'default',
+                color: recommendations.length > 0 ? '#1db954' : undefined,
+                border: '2px solid #1db954', borderRadius: 8, padding: '8px 16px', display: 'inline-block', background: '#fff', transition: 'background 0.2s', marginRight: 12
+              }}
+              onClick={() => recommendations.length > 0 && setShowRecModal(true)}
+              onMouseOver={e => { if (recommendations.length > 0) e.currentTarget.style.background = '#eafbee'; }}
+              onMouseOut={e => { if (recommendations.length > 0) e.currentTarget.style.background = '#fff'; }}
+            >Recommended Tracks for you from list of {users.find(u => u._id === selectedUser)?.username || 'selected user'}:</b>
             {recLoading && <div>Loading recommendations...</div>}
             {recError && <div style={{ color: 'red' }}>{recError}</div>}
-            {!recLoading && recommendations.length === 0 && !recError && (
-              <div style={{ color: '#888', marginTop: 8 }}>No strong recommendations found.</div>
-            )}
-            <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
-              {recommendations.map(rec => (
-                <li key={rec.trackId} style={{ marginBottom: 8 }}>
-                  <span style={{ fontWeight: 500 }}>{rec.trackName}</span>
-                  {rec.artists && (
-                    <span style={{ color: '#888', fontSize: '0.95em' }}> ({rec.artists.join(', ')})</span>
-                  )}
-                  {typeof rec.score === 'number' && (
-                    <span style={{ color: '#1db954', marginLeft: 8, fontSize: '0.96em' }}>+{rec.score} match{rec.score !== 1 ? 'es' : ''}</span>
-                  )}
-                </li>
-              ))}
-            </ul>
           </div>
-
+          <RecommendationsModal
+            open={showRecModal}
+            onClose={() => setShowRecModal(false)}
+            recommendations={recommendations}
+            title={"Recommended Tracks"}
+            subtitle={users.find(u => u._id === selectedUser)?.username ? `for ${users.find(u => u._id === selectedUser)?.username}` : undefined}
+          />
           {/* Reverse recommendations section */}
           <div style={{ marginTop: 24 }}>
-            <b>Recommended Tracks for {users.find(u => u._id === selectedUser)?.username || 'selected user'} from your list:</b>
-            {reverseLoading && <div>Loading recommendations...</div>}
+            <b
+              style={{
+                cursor: reverseRecs.length > 0 ? 'pointer' : 'default',
+                color: reverseRecs.length > 0 ? '#1db954' : undefined,
+                border: '2px solid #1db954', borderRadius: 8, padding: '8px 16px', display: 'inline-block', background: '#fff', transition: 'background 0.2s', marginRight: 12
+              }}
+              onClick={() => reverseRecs.length > 0 && setShowReverseRecModal(true)}
+              onMouseOver={e => { if (reverseRecs.length > 0) e.currentTarget.style.background = '#eafbee'; }}
+              onMouseOut={e => { if (reverseRecs.length > 0) e.currentTarget.style.background = '#fff'; }}
+            >Recommended Tracks for {users.find(u => u._id === selectedUser)?.username || 'selected user'} from your list:</b>
+            {reverseLoading && <div>Loading reverse recommendations...</div>}
             {reverseError && <div style={{ color: 'red' }}>{reverseError}</div>}
-            {!reverseLoading && reverseRecs.length === 0 && !reverseError && (
-              <div style={{ color: '#888', marginTop: 8 }}>No strong recommendations found.</div>
-            )}
-            <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
-              {reverseRecs.map(rec => (
-                <li key={rec.trackId} style={{ marginBottom: 8 }}>
-                  <span style={{ fontWeight: 500 }}>{rec.trackName}</span>
-                  {rec.artists && (
-                    <span style={{ color: '#888', fontSize: '0.95em' }}> ({rec.artists.join(', ')})</span>
-                  )}
-                  {typeof rec.score === 'number' && (
-                    <span style={{ color: '#1db954', marginLeft: 8, fontSize: '0.96em' }}>+{rec.score} match{rec.score !== 1 ? 'es' : ''}</span>
-                  )}
-                </li>
-              ))}
-            </ul>
           </div>
+          <RecommendationsModal
+            open={showReverseRecModal}
+            onClose={() => setShowReverseRecModal(false)}
+            recommendations={reverseRecs}
+            title={"Recommended Tracks"}
+            subtitle={users.find(u => u._id === selectedUser)?.username ? `for ${users.find(u => u._id === selectedUser)?.username}` : undefined}
+          />
         </div>
       )}
     </div>
