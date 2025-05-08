@@ -13,7 +13,6 @@ const COMPATIBILITY_WEIGHTS = {
 
 // GET /api/musiliked - Get all Musi-Liked tracks for the logged-in user
 exports.getMusiliked = async (req, res) => {
-  console.log('GET /api/musiliked called');
   const auth = req.headers.authorization;
   if (!auth) return res.status(401).json({ error: 'No token provided.' });
   const token = auth.split(' ')[1];
@@ -29,10 +28,23 @@ exports.getMusiliked = async (req, res) => {
     const tracks = await Musiliked.find({ user: user._id })
       .populate('fromUser', 'username')
       .populate('recommendation');
-    console.log('Tracks with populated fromUser:', JSON.stringify(tracks, null, 2));
     res.json({ tracks });
   } catch (err) {
     console.error('GET /api/musiliked error:', err);
+    res.status(500).json({ error: 'Could not fetch Musi-Liked tracks.' });
+  }
+}
+
+// GET /api/musiliked/user/:userId - Get all Musi-Liked tracks for any user (public)
+exports.getMusilikedForUser = async (req, res) => {
+  const { userId } = req.params;
+  if (!userId) return res.status(400).json({ error: 'Missing userId param' });
+  try {
+    const tracks = await Musiliked.find({ user: userId })
+      .populate('fromUser', 'username')
+      .populate('recommendation');
+    res.json({ tracks });
+  } catch (err) {
     res.status(500).json({ error: 'Could not fetch Musi-Liked tracks.' });
   }
 };

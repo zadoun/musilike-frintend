@@ -162,20 +162,6 @@ app.put('/api/profile/artistes', async (req, res) => {
   }
 });
 
-// Get profile (protected)
-app.get('/api/profile', async (req, res) => {
-  const auth = req.headers.authorization;
-  if (!auth) return res.status(401).json({ error: 'No token provided.' });
-  const token = auth.split(' ')[1];
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    const user = await User.findOne({ email: decoded.email });
-    if (!user) return res.status(404).json({ error: 'User not found.' });
-    res.json({ email: user.email, username: user.username, _id: user._id, musiliked_genres: user.musiliked_genres, musiliked_artistes: user.musiliked_artistes });
-  } catch (err) {
-    res.status(401).json({ error: 'Invalid token.' });
-  }
-});
 
 // Profile endpoint for current user
 app.get('/api/profile', async (req, res) => {
@@ -186,9 +172,68 @@ app.get('/api/profile', async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev_secret');
     const user = await User.findOne({ email: decoded.email });
     if (!user) return res.status(404).json({ error: 'User not found.' });
-    res.json({ email: user.email, username: user.username, _id: user._id, musiliked_genres: user.musiliked_genres, musiliked_artistes: user.musiliked_artistes });
+    res.json({
+      email: user.email,
+      username: user.username,
+      _id: user._id,
+      isSinger: user.isSinger,
+      singerLevel: user.singerLevel,
+      isMusician: user.isMusician,
+      instruments: user.instruments,
+      musiliked_genres: user.musiliked_genres,
+      musiliked_artistes: user.musiliked_artistes,
+      profilePicture: user.profilePicture,
+      birthday: user.birthday,
+      gender: user.gender
+    });
   } catch (err) {
     res.status(401).json({ error: 'Invalid token.' });
+  }
+});
+
+// PUT /api/profile - update profile fields (profilePicture, birthday, gender)
+app.put('/api/profile', async (req, res) => {
+  const auth = req.headers.authorization;
+  if (!auth) return res.status(401).json({ error: 'No token provided.' });
+  const token = auth.split(' ')[1];
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev_secret');
+    const user = await User.findOne({ email: decoded.email });
+    if (!user) return res.status(404).json({ error: 'User not found.' });
+    const { profilePicture, birthday, gender, isSinger, singerLevel, isMusician, instruments } = req.body;
+    if (profilePicture !== undefined) user.profilePicture = profilePicture;
+    if (birthday !== undefined) user.birthday = birthday;
+    if (gender !== undefined) user.gender = gender;
+    if (isSinger !== undefined) user.isSinger = isSinger;
+    if (singerLevel !== undefined) user.singerLevel = singerLevel;
+    if (isMusician !== undefined) user.isMusician = isMusician;
+    if (instruments !== undefined) {
+      // Merge instruments by name: update existing, add new, keep others
+      const existing = Array.isArray(user.instruments) ? [...user.instruments] : [];
+      const incoming = Array.isArray(instruments) ? instruments.map(({ _id, ...rest }) => rest) : [];
+      // Create a map for quick lookup
+      const existingMap = new Map(existing.map(inst => [inst.name, inst]));
+      // Update or add
+      incoming.forEach(inst => {
+        existingMap.set(inst.name, { ...existingMap.get(inst.name), ...inst });
+      });
+      // Keep all instruments: updated, added, and untouched
+      user.instruments = Array.from(existingMap.values());
+    }
+
+    await user.save();
+    res.json({
+      message: 'Profile updated.',
+      profilePicture: user.profilePicture,
+      birthday: user.birthday,
+      gender: user.gender,
+      isSinger: user.isSinger,
+      singerLevel: user.singerLevel,
+      isMusician: user.isMusician,
+      instruments: user.instruments
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Could not update profile.' });
   }
 });
 
@@ -209,6 +254,7 @@ app.get('/api/hidden-recommendation', HiddenRecommendationController.listHiddenR
 app.post('/api/musiliked', MusilikedController.addMusiliked);
 app.delete('/api/musiliked/:trackId', MusilikedController.deleteMusiliked);
 app.get('/api/musiliked', MusilikedController.getMusiliked);
+app.get('/api/musiliked/user/:userId', MusilikedController.getMusilikedForUser);
 app.get('/api/musiliked/compatibility', MusilikedController.getCompatibility);
 app.get('/api/musiliked/recommend', MusilikedController.getRecommendations);
 app.get('/api/musiliked/recommend-reverse', MusilikedController.getReverseRecommendations);

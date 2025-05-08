@@ -11,11 +11,12 @@ export default function Compatibility({ currentUserId }) {
   const [recommendations, setRecommendations] = useState([]);
   const [recLoading, setRecLoading] = useState(false);
   const [recError, setRecError] = useState('');
-
   // Reverse recommendations state
   const [reverseRecs, setReverseRecs] = useState([]);
   const [reverseLoading, setReverseLoading] = useState(false);
   const [reverseError, setReverseError] = useState('');
+  // Last liked track for selected user
+  const [selectedUserLastTrack, setSelectedUserLastTrack] = useState(null);
 
   // Fetch all users except self
   useEffect(() => {
@@ -39,6 +40,7 @@ export default function Compatibility({ currentUserId }) {
     setError('');
     setRecommendations([]);
     setRecError('');
+    setSelectedUserLastTrack(null); // Reset before fetching
     try {
       const res = await fetch(`${API_URL}/api/musiliked/compatibility?userA=${currentUserId}&userB=${selectedUser}`);
       if (!res.ok) throw new Error('API error');
@@ -50,7 +52,6 @@ export default function Compatibility({ currentUserId }) {
       if (!recRes.ok) throw new Error('Rec API error');
       const recData = await recRes.json();
       setRecommendations(recData.recommendations || []);
-
       // Fetch reverse recommendations
       setReverseLoading(true);
       setReverseError('');
@@ -59,6 +60,16 @@ export default function Compatibility({ currentUserId }) {
       if (!reverseRes.ok) throw new Error('Reverse Rec API error');
       const reverseData = await reverseRes.json();
       setReverseRecs(reverseData.recommendations || []);
+      // Fetch last liked track for selected user
+      const lastTrackRes = await fetch(`${API_URL}/api/musiliked/user/${selectedUser}`);
+      if (lastTrackRes.ok) {
+        const lastTrackData = await lastTrackRes.json();
+        if (Array.isArray(lastTrackData.tracks) && lastTrackData.tracks.length > 0) {
+          // Sort by createdAt descending if available
+          const sortedTracks = [...lastTrackData.tracks].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+          setSelectedUserLastTrack(sortedTracks[0]);
+        }
+      }
     } catch (e) {
       if (e.message.includes('Rec API')) setRecError('Could not fetch recommendations.');
       else if (e.message.includes('Reverse Rec API')) setReverseError('Could not fetch reverse recommendations.');
@@ -68,6 +79,7 @@ export default function Compatibility({ currentUserId }) {
     setRecLoading(false);
     setReverseLoading(false);
   };
+
 
   return (
     <div className="music-profile-container">
@@ -93,6 +105,37 @@ export default function Compatibility({ currentUserId }) {
       {error && <div style={{ color: 'red', marginBottom: 10 }}>{error}</div>}
       {result && (
         <div className="music-profile-list" style={{ marginTop: 18 }}>
+          {/* Profile Picture above the score */}
+          {(() => {
+            const selectedUserObj = users.find(u => u._id === selectedUser);
+            if (selectedUserObj?.profilePicture) {
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 10 }}>
+                  <img
+                    src={selectedUserObj.profilePicture}
+                    alt={selectedUserObj.username + "'s profile"}
+                    style={{ width: 90, height: 90, borderRadius: '50%', objectFit: 'cover', border: '3px solid #1db954', background: '#eee' }}
+                  />
+                  {/* Last liked track below avatar */}
+                  {selectedUserLastTrack && selectedUserLastTrack.spotifyUrl && selectedUserLastTrack.spotifyUrl.includes('spotify.com/track/') && (
+                    <div style={{ marginTop: 10, marginBottom: 10, width: '100%', textAlign: 'center' }}>
+                      <iframe
+                        title="Spotify Player"
+                        src={`https://open.spotify.com/embed/track/${selectedUserLastTrack.spotifyUrl.split('/track/')[1]?.split('?')[0]}`}
+                        width="320"
+                        height="90"
+                        frameBorder="0"
+                        allowtransparency="true"
+                        allow="encrypted-media"
+                        style={{ borderRadius: 8, margin: '0 auto', display: 'block' }}
+                      />
+                    </div>
+                  )}
+                </div>
+              );
+            }
+            return null;
+          })()}
           <div style={{ fontSize: '1.22em', fontWeight: 600, marginBottom: 10 }}>
             Compatibility Score: <span style={{ color: '#1db954' }}>{(result.scores.weightedScore * 100).toFixed(1)}%</span>
           </div>

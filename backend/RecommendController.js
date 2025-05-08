@@ -59,12 +59,12 @@ const sendRecommendation = async (req, res) => {
           message,
           track
         });
-        console.log('Emitted new-recommendation to', toUserId);
+        
       } else {
-        console.log('No socket found for recipient:', toUserId);
+        
       }
     } catch (e) {
-      console.log('Socket emit error:', e);
+      
     }
     res.status(201).json({ message: 'Recommendation sent!' });
   } catch (err) {
@@ -121,12 +121,12 @@ const reactToRecommendation = async (req, res) => {
           recommendationId: rec._id,
           reaction: rec.reaction
         });
-        console.log('Emitted recommendation-reacted to', senderId);
+        
       } else {
-        console.log('No socket found for sender:', senderId);
+        
       }
     } catch (e) {
-      console.log('Socket emit error:', e);
+      
     }
 
     res.json({ success: true, reaction: rec.reaction });
