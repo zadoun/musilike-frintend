@@ -1,3 +1,29 @@
+.genre-pill, .artist-pill {
+  display: flex;
+  align-items: center;
+  border-radius: 12px;
+  padding: 6px 20px;
+  margin: 4px;
+  font-size: 1.05rem;
+  font-weight: 400;
+  color: #fff;
+  background: #232323;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.17s;
+}
+.genre-pill.selected, .artist-pill.selected {
+  border: 2px solid #1db954;
+  background: #181818;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(30,185,84,0.09);
+  color: #fff;
+}
+.genre-pill:hover, .artist-pill:hover {
+  border-color: #1db954;
+  background: #222;
+}
+
 .music-profile-container {
   max-width: 700px;
   margin: 2rem auto;

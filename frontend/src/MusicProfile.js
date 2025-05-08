@@ -194,17 +194,59 @@ export default function MusicProfile() {
       <div className="genre-selection" style={{marginBottom: 24}}>
         <h3>Your favorite genres</h3>
         <div style={{display: 'flex', flexWrap: 'wrap', gap: '12px'}}>
-          {SPOTIFY_GENRES.map(genre => (
-            <label key={genre} style={{display: 'flex', alignItems: 'center', gap: 4, background: selectedGenres.includes(genre) ? '#b2f5ea' : '#eee', borderRadius: 8, padding: '4px 10px', cursor: 'pointer', color: '#111'}}>
-              <input
-                type="checkbox"
-                checked={selectedGenres.includes(genre)}
-                onChange={() => handleGenreChange(genre)}
-                style={{marginRight: 4}}
-              />
-              {genre}
-            </label>
-          ))}
+          {(() => {
+  const genreIcons = {
+    "pop": "🎤",
+    "rock": "🎸",
+    "hip hop": "🎧",
+    "indie": "🎨",
+    "electronic": "🎛️",
+    "dance": "💃",
+    "jazz": "🎷",
+    "classical": "🎻",
+    "metal": "🤘",
+    "r&b": "🎶",
+    "soul": "❤️",
+    "reggae": "🌴",
+    "punk": "🏴",
+    "folk": "🪕",
+    "blues": "🎙️",
+    "country": "🤠",
+    "funk": "🕺",
+    "disco": "✨",
+    "house": "🔊",
+    "techno": "⚡",
+    "trap": "🏆",
+    "k-pop": "🎀",
+    "latin": "🌶️",
+    "alternative": "🎭",
+    "ambient": "🌌"
+  };
+  return SPOTIFY_GENRES.map(genre => (
+    <div
+      key={genre}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 6,
+        background: selectedGenres.includes(genre) ? '#b2f5ea' : '#eee',
+        borderRadius: 8,
+        padding: '4px 10px',
+        cursor: 'pointer',
+        color: '#111',
+        border: selectedGenres.includes(genre) ? '2px solid #319795' : '2px solid transparent',
+        fontWeight: selectedGenres.includes(genre) ? 600 : 400,
+        transition: 'all 0.15s',
+      }}
+      title={genre}
+      onClick={() => handleGenreChange(genre)}
+    >
+      <span style={{fontSize: '1.15em'}}>{genreIcons[genre]}</span>
+      {genre}
+    </div>
+  ));
+})()}
+
         </div>
         {hasChangedRef.current && saveStatus && (
           <div style={{marginTop: 8, fontSize: 13, color: saveStatus === 'Saved' ? 'green' : 'red'}}>
@@ -222,23 +264,23 @@ export default function MusicProfile() {
           ) : (
             <div style={{display: 'flex', flexWrap: 'wrap', gap: '14px'}}>
               {popularArtists.map(artist => {
-                const isSelected = selectedArtists.includes(artist.id);
-                return (
-                  <div key={artist.id} style={{display: 'flex', alignItems: 'center', background: isSelected ? '#b2f5ea' : '#f6f6f6', borderRadius: 8, padding: '4px 10px', cursor: 'pointer', minWidth: 0, border: isSelected ? '2px solid #319795' : '2px solid transparent'}}
-                    title={artist.name}
-                    onClick={() => {
-                      setSelectedArtists(prev => prev.includes(artist.id) ? prev.filter(id => id !== artist.id) : [...prev, artist.id]);
-                    }}>
-                    {artist.images && artist.images.length > 0 && (
-                      <img src={artist.images[0].url} alt={artist.name} style={{width: 36, height: 36, objectFit: 'cover', borderRadius: '50%', marginRight: 8}} />
-                    )}
-                    <span style={{whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 120, color: '#111'}}>{artist.name}</span>
-                    <a href={artist.spotifyUrl} target="_blank" rel="noopener noreferrer" style={{marginLeft: 8, color: '#1db954', fontWeight: 600, textDecoration: 'none', fontSize: 16}} title="Voir sur Spotify" onClick={e => e.stopPropagation()}>
-                      ♫
-                    </a>
-                  </div>
-                );
-              })}
+  const isSelected = selectedArtists.includes(artist.id);
+  return (
+    <div key={artist.id} style={{display: 'flex', alignItems: 'center', background: isSelected ? '#b2f5ea' : '#f6f6f6', borderRadius: 8, padding: '4px 10px', cursor: 'pointer', minWidth: 0, border: isSelected ? '2px solid #319795' : '2px solid transparent'}}
+      title={artist.name}
+      onClick={() => {
+        setSelectedArtists(prev => prev.includes(artist.id) ? prev.filter(id => id !== artist.id) : [...prev, artist.id]);
+      }}>
+      {artist.images && artist.images.length > 0 && (
+        <img src={artist.images[0].url} alt={artist.name} style={{width: 36, height: 36, objectFit: 'cover', borderRadius: '50%', marginRight: 8}} />
+      )}
+      <span style={{whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 120, color: '#111'}}>{artist.name}</span>
+      <a href={artist.spotifyUrl} target="_blank" rel="noopener noreferrer" style={{marginLeft: 8, color: '#1db954', fontWeight: 600, textDecoration: 'none', fontSize: 16}} title="Voir sur Spotify" onClick={e => e.stopPropagation()}>
+        ♫
+      </a>
+    </div>
+  );
+})}
             </div>
           )}
         </div>
