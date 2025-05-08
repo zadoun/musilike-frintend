@@ -210,6 +210,8 @@ app.post('/api/musiliked', MusilikedController.addMusiliked);
 app.delete('/api/musiliked/:trackId', MusilikedController.deleteMusiliked);
 app.get('/api/musiliked', MusilikedController.getMusiliked);
 app.get('/api/musiliked/compatibility', MusilikedController.getCompatibility);
+app.get('/api/musiliked/recommend', MusilikedController.getRecommendations);
+app.get('/api/musiliked/recommend-reverse', MusilikedController.getReverseRecommendations);
 
 // Endpoint pour obtenir les morceaux populaires par artistes sélectionnés
 app.post('/api/spotify/popular-tracks-by-artists', async (req, res) => {

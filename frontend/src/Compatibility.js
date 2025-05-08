@@ -8,6 +8,14 @@ export default function Compatibility({ currentUserId }) {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [recommendations, setRecommendations] = useState([]);
+  const [recLoading, setRecLoading] = useState(false);
+  const [recError, setRecError] = useState('');
+
+  // Reverse recommendations state
+  const [reverseRecs, setReverseRecs] = useState([]);
+  const [reverseLoading, setReverseLoading] = useState(false);
+  const [reverseError, setReverseError] = useState('');
 
   // Fetch all users except self
   useEffect(() => {
@@ -29,15 +37,36 @@ export default function Compatibility({ currentUserId }) {
     setLoading(true);
     setResult(null);
     setError('');
+    setRecommendations([]);
+    setRecError('');
     try {
       const res = await fetch(`${API_URL}/api/musiliked/compatibility?userA=${currentUserId}&userB=${selectedUser}`);
       if (!res.ok) throw new Error('API error');
       const data = await res.json();
       setResult(data);
+      // Fetch recommendations
+      setRecLoading(true);
+      const recRes = await fetch(`${API_URL}/api/musiliked/recommend?userA=${currentUserId}&userB=${selectedUser}&limit=5`);
+      if (!recRes.ok) throw new Error('Rec API error');
+      const recData = await recRes.json();
+      setRecommendations(recData.recommendations || []);
+
+      // Fetch reverse recommendations
+      setReverseLoading(true);
+      setReverseError('');
+      setReverseRecs([]);
+      const reverseRes = await fetch(`${API_URL}/api/musiliked/recommend-reverse?userA=${currentUserId}&userB=${selectedUser}&limit=5`);
+      if (!reverseRes.ok) throw new Error('Reverse Rec API error');
+      const reverseData = await reverseRes.json();
+      setReverseRecs(reverseData.recommendations || []);
     } catch (e) {
-      setError('Could not fetch compatibility.');
+      if (e.message.includes('Rec API')) setRecError('Could not fetch recommendations.');
+      else if (e.message.includes('Reverse Rec API')) setReverseError('Could not fetch reverse recommendations.');
+      else setError('Could not fetch compatibility.');
     }
     setLoading(false);
+    setRecLoading(false);
+    setReverseLoading(false);
   };
 
   return (
@@ -98,6 +127,50 @@ export default function Compatibility({ currentUserId }) {
                 <b>Shared Genres:</b> {result.sharedGenres.join(', ')}
               </div>
             )}
+          </div>
+          <div style={{ marginTop: 24 }}>
+            <b>Recommended Tracks for you from list of {users.find(u => u._id === selectedUser)?.username || 'selected user'}:</b>
+            {recLoading && <div>Loading recommendations...</div>}
+            {recError && <div style={{ color: 'red' }}>{recError}</div>}
+            {!recLoading && recommendations.length === 0 && !recError && (
+              <div style={{ color: '#888', marginTop: 8 }}>No strong recommendations found.</div>
+            )}
+            <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
+              {recommendations.map(rec => (
+                <li key={rec.trackId} style={{ marginBottom: 8 }}>
+                  <span style={{ fontWeight: 500 }}>{rec.trackName}</span>
+                  {rec.artists && (
+                    <span style={{ color: '#888', fontSize: '0.95em' }}> ({rec.artists.join(', ')})</span>
+                  )}
+                  {typeof rec.score === 'number' && (
+                    <span style={{ color: '#1db954', marginLeft: 8, fontSize: '0.96em' }}>+{rec.score} match{rec.score !== 1 ? 'es' : ''}</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Reverse recommendations section */}
+          <div style={{ marginTop: 24 }}>
+            <b>Recommended Tracks for {users.find(u => u._id === selectedUser)?.username || 'selected user'} from your list:</b>
+            {reverseLoading && <div>Loading recommendations...</div>}
+            {reverseError && <div style={{ color: 'red' }}>{reverseError}</div>}
+            {!reverseLoading && reverseRecs.length === 0 && !reverseError && (
+              <div style={{ color: '#888', marginTop: 8 }}>No strong recommendations found.</div>
+            )}
+            <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
+              {reverseRecs.map(rec => (
+                <li key={rec.trackId} style={{ marginBottom: 8 }}>
+                  <span style={{ fontWeight: 500 }}>{rec.trackName}</span>
+                  {rec.artists && (
+                    <span style={{ color: '#888', fontSize: '0.95em' }}> ({rec.artists.join(', ')})</span>
+                  )}
+                  {typeof rec.score === 'number' && (
+                    <span style={{ color: '#1db954', marginLeft: 8, fontSize: '0.96em' }}>+{rec.score} match{rec.score !== 1 ? 'es' : ''}</span>
+                  )}
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       )}

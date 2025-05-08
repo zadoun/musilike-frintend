@@ -75,7 +75,81 @@ exports.addMusiliked = async (req, res) => {
   }
 };
 
-// GET /api/musiliked/compatibility?userA=xxx&userB=yyy - Compare Musi-Liked tracks between two users
+
+
+// GET /api/musiliked/recommend?userA=xxx&userB=yyy - Recommend tracks from userB to userA based on artist/genre overlap
+exports.getRecommendations = async (req, res) => {
+  const { userA, userB, limit } = req.query;
+  if (!userA || !userB) return res.status(400).json({ error: 'Missing user IDs' });
+  const N = limit ? parseInt(limit, 10) : 10;
+  try {
+    const User = require('./models/User');
+    const userAObj = await User.findById(userA);
+    const userBObj = await User.findById(userB);
+    if (!userAObj || !userBObj) return res.status(404).json({ error: 'User not found' });
+    const userAgenres = new Set(Array.isArray(userAObj.musiliked_genres) ? userAObj.musiliked_genres : []);
+    // Get all tracks for both users
+    const [tracksA, tracksB] = await Promise.all([
+      Musiliked.find({ user: userA }),
+      Musiliked.find({ user: userB })
+    ]);
+    const userAartists = new Set(tracksA.flatMap(t => t.artists || []));
+    const userAtrackIds = new Set(tracksA.map(t => t.trackId));
+    // Candidate tracks: liked by userB, not by userA
+    const candidateTracks = tracksB.filter(t => !userAtrackIds.has(t.trackId));
+    // Score by genre/artist overlap
+    const scored = candidateTracks.map(track => {
+      const genreScore = (track.genres || []).filter(g => userAgenres.has(g)).length;
+      const artistScore = (track.artists || []).filter(a => userAartists.has(a)).length;
+      return { track, score: genreScore + artistScore };
+    });
+    scored.sort((a, b) => b.score - a.score);
+    res.json({
+      recommendations: scored.slice(0, N).map(s => ({ ...s.track.toObject(), score: s.score })),
+      total: scored.length
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Could not generate recommendations.' });
+  }
+};
+
+// GET /api/musiliked/recommend-reverse?userA=xxx&userB=yyy - Recommend tracks from userA to userB based on artist/genre overlap
+exports.getReverseRecommendations = async (req, res) => {
+  const { userA, userB, limit } = req.query;
+  if (!userA || !userB) return res.status(400).json({ error: 'Missing user IDs' });
+  const N = limit ? parseInt(limit, 10) : 10;
+  try {
+    const User = require('./models/User');
+    const userAObj = await User.findById(userA);
+    const userBObj = await User.findById(userB);
+    if (!userAObj || !userBObj) return res.status(404).json({ error: 'User not found' });
+    const userBgenres = new Set(Array.isArray(userBObj.musiliked_genres) ? userBObj.musiliked_genres : []);
+    // Get all tracks for both users
+    const [tracksA, tracksB] = await Promise.all([
+      Musiliked.find({ user: userA }),
+      Musiliked.find({ user: userB })
+    ]);
+    const userBartists = new Set(tracksB.flatMap(t => t.artists || []));
+    const userBtrackIds = new Set(tracksB.map(t => t.trackId));
+    // Candidate tracks: liked by userA, not by userB
+    const candidateTracks = tracksA.filter(t => !userBtrackIds.has(t.trackId));
+    // Score by genre/artist overlap
+    const scored = candidateTracks.map(track => {
+      const genreScore = (track.genres || []).filter(g => userBgenres.has(g)).length;
+      const artistScore = (track.artists || []).filter(a => userBartists.has(a)).length;
+      return { track, score: genreScore + artistScore };
+    });
+    scored.sort((a, b) => b.score - a.score);
+    res.json({
+      recommendations: scored.slice(0, N).map(s => ({ ...s.track.toObject(), score: s.score })),
+      total: scored.length
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Could not generate reverse recommendations.' });
+  }
+};
+
+// Compatibility endpoint
 exports.getCompatibility = async (req, res) => {
   const { userA, userB } = req.query;
   if (!userA || !userB) return res.status(400).json({ error: 'Missing user IDs' });
