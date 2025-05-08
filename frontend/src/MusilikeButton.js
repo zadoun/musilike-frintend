@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import API_URL from './api';
 
-export default function MusilikeButton({ track, musilikedIds = [], refreshMusilikedIds }) {
+export default function MusilikeButton({ track, musilikedIds = [], refreshMusilikedIds, fromUserId }) {
   const [loading, setLoading] = useState(false);
   const isMusiliked = musilikedIds.includes(track.id);
 
@@ -22,10 +22,11 @@ export default function MusilikeButton({ track, musilikedIds = [], refreshMusili
       artists: track.artists.map(a => a.name),
       albumName: track.album?.name,
       albumImage: track.album?.images?.[0]?.url,
-      spotifyUrl: track.external_urls?.spotify
+      spotifyUrl: track.external_urls?.spotify,
+      ...(fromUserId ? { fromUserId } : {})
     });
     try {
-      await fetch(url, {
+      const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
@@ -33,7 +34,11 @@ export default function MusilikeButton({ track, musilikedIds = [], refreshMusili
         },
         body
       });
-      refreshMusilikedIds && refreshMusilikedIds();
+      if (response.ok) {
+        refreshMusilikedIds && refreshMusilikedIds();
+      } else {
+        alert('Could not update Musi-Like.');
+      }
     } catch (err) {
       alert('Could not update Musi-Like.');
     }

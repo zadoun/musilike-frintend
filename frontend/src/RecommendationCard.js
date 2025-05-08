@@ -71,10 +71,11 @@ export default function RecommendationCard({ rec, musilikedIds, refreshMusiliked
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flex: 1 }}>
           <MusilikeButton
-  track={rec.track}
-  musilikedIds={musilikedIds}
-  refreshMusilikedIds={refreshMusilikedIds}
-/>
+            track={rec.track}
+            musilikedIds={musilikedIds}
+            refreshMusilikedIds={refreshMusilikedIds}
+            fromUserId={rec.fromUser?._id}
+          />
           {/* Trash button below Musi-Like */}
           <button
             className="trash-btn"
