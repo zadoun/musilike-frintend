@@ -544,6 +544,7 @@ export default function MusicProfile({ musilikedRefreshFlag }) {
     const responseData = await res.json();
     console.log('Backend response:', responseData);
     setProfileSaveStatus('Saved!');
+    setProfileEditMode(false); // Switch to read-only mode after save
     return;
     } catch {
       setProfileSaveStatus('Error saving profile');
