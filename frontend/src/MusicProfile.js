@@ -4,7 +4,7 @@ import './MusicProfile.css';
 import SPOTIFY_GENRES from './spotifyGenres';
 import MusilikeButton from './MusilikeButton';
 
-export default function MusicProfile() {
+export default function MusicProfile({ musilikedRefreshFlag }) {
   const [tracks, setTracks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -18,13 +18,14 @@ export default function MusicProfile() {
       .then(res => res.ok ? res.json() : Promise.reject())
       .then(data => {
         setTracks(data.tracks || []);
+        console.log('Musi-Liked tracks from backend:', data.tracks);
         setLoading(false);
       })
       .catch(() => {
-        setError('Could not load your Musi-Liked tracks.');
+        setError('Could not fetch your Musi-Liked tracks');
         setLoading(false);
       });
-  }, []);
+  }, [musilikedRefreshFlag]);
 
   // State pour la sélection des genres
   const [selectedGenres, setSelectedGenres] = useState([]);
@@ -364,7 +365,7 @@ export default function MusicProfile() {
           marginBottom: 10,
           borderBottom: '1px solid #e0e0e0',
           fontWeight: 500,
-          maxWidth: 600,
+          maxWidth: 900,
           width: '100%',
           boxSizing: 'border-box',
           transition: 'background 0.15s',
@@ -445,6 +446,28 @@ export default function MusicProfile() {
             </span>
             <span style={{fontSize: 12, color: '#1DB954', fontWeight: 700, letterSpacing: 0.5, marginTop: 0}}>Spotify</span>
           </a>
+        )}
+        {/* Sender box right-aligned */}
+        {track.fromUser && track.fromUser.username && (
+          <div style={{
+            marginLeft: 18,
+            minWidth: 90,
+            background: '#49536a',
+            color: '#ffc857',
+            borderRadius: 11,
+            fontWeight: 700,
+            fontSize: 17,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '10px 18px',
+            height: 56,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.10)'
+          }}>
+            <span style={{fontSize: 15, color: '#e6e6e6', fontWeight: 500, marginBottom: 2}}>From</span>
+            <span style={{color: '#ffc857', fontWeight: 700, fontSize: 18}}>{track.fromUser.username}</span>
+          </div>
         )}
       </div>
     ))}

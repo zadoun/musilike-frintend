@@ -6,6 +6,7 @@ import SpotifySearchBar from './SpotifySearchBar';
 import Inbox from './Inbox';
 import SentRecommendations from './SentRecommendations';
 import MusicProfile from './MusicProfile';
+import Compatibility from './Compatibility';
 import { io } from 'socket.io-client';
 import API_URL from './api';
 
@@ -34,6 +35,9 @@ function Toast({ message, onClose }) {
 
 
 function App() {
+  const [musilikedRefreshFlag, setMusilikedRefreshFlag] = useState(false);
+  const [page, setPage] = useState('search');
+  const toggleMusilikedRefreshFlag = () => setMusilikedRefreshFlag(f => !f);
   const [toast, setToast] = useState(null);
   const [inboxBadge, setInboxBadge] = useState(() => {
     const stored = localStorage.getItem('inboxBadgeCount');
@@ -48,7 +52,7 @@ function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [page, setPage] = React.useState('search');
+
   const socketRef = useRef(null);
 
   // On mount, check for JWT and fetch profile
@@ -153,10 +157,12 @@ function App() {
       Sent{sentBadge > 0 && <span className="badge">{sentBadge}</span>}
     </button>
     <button className="topbar-btn topbar-btn-right" onClick={() => setPage('playlist')}>Liked Music</button>
+    <button className="topbar-btn topbar-btn-right" onClick={() => setPage('compatibility')}>Compatibility</button>
   </div>
 </nav>
-          {page === 'search' && <SpotifySearchBar />}
-          {page === 'playlist' && <MusicProfile />}
+          {page === 'search' && <SpotifySearchBar onMusilikedChange={toggleMusilikedRefreshFlag} />}
+          {page === 'playlist' && <MusicProfile musilikedRefreshFlag={musilikedRefreshFlag} />}
+          {page === 'compatibility' && user && user._id && <Compatibility currentUserId={user._id} />}
           {page === 'inbox' && <Inbox userId={user._id} refreshFlag={refreshInboxFlag} />}
           {page === 'sent' && <SentRecommendations userId={user._id} />}
         </div>

@@ -208,25 +208,8 @@ app.get('/api/hidden-recommendation', HiddenRecommendationController.listHiddenR
 // Musi-Liked endpoints
 app.post('/api/musiliked', MusilikedController.addMusiliked);
 app.delete('/api/musiliked/:trackId', MusilikedController.deleteMusiliked);
-app.get('/api/musiliked', async (req, res) => {
-  const auth = req.headers.authorization;
-  if (!auth) return res.status(401).json({ error: 'No token provided.' });
-  const token = auth.split(' ')[1];
-  let user;
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev_secret');
-    user = await User.findOne({ email: decoded.email });
-    if (!user) return res.status(404).json({ error: 'User not found.' });
-  } catch (err) {
-    return res.status(401).json({ error: 'Invalid token.' });
-  }
-  try {
-    const tracks = await require('./models/Musiliked').find({ user: user._id });
-    res.json({ tracks });
-  } catch (err) {
-    res.status(500).json({ error: 'Could not fetch Musi-Liked tracks.' });
-  }
-});
+app.get('/api/musiliked', MusilikedController.getMusiliked);
+app.get('/api/musiliked/compatibility', MusilikedController.getCompatibility);
 
 // Endpoint pour obtenir les morceaux populaires par artistes sélectionnés
 app.post('/api/spotify/popular-tracks-by-artists', async (req, res) => {

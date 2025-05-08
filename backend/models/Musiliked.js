@@ -9,6 +9,8 @@ const MusilikedSchema = new mongoose.Schema({
   albumImage: String,
   spotifyUrl: String,
   rawTrack: {}, // Store the full track object if needed
+  recommendation: { type: mongoose.Schema.Types.ObjectId, ref: 'Recommendation', required: false },
+  fromUser: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false },
   createdAt: { type: Date, default: Date.now }
 });
 

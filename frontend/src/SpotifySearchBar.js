@@ -4,7 +4,7 @@ import './SpotifySearchBar.css';
 import RecommendModal from './RecommendModal';
 import MusilikeButton from './MusilikeButton';
 
-function SpotifySearchBar({ onResults }) {
+function SpotifySearchBar({ onResults, onMusilikedChange }) {
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -130,7 +130,7 @@ function SpotifySearchBar({ onResults }) {
                   <MusilikeButton
   track={track}
   musilikedIds={musilikedIds}
-  refreshMusilikedIds={refreshMusiliked}
+  refreshMusilikedIds={onMusilikedChange}
 />
                 </div>
               </li>
