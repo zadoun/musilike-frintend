@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const mongoose = require('mongoose');
 const User = require('./models/User');
-const { searchSpotifyTracks, getPopularArtistsByGenre, getMixedArtistsByGenre } = require('./spotify');
+const { searchSpotifyTracks, getPopularArtistsByGenre, getMixedArtistsByGenre, getPopularTracksByArtists } = require('./spotify');
 const MusilikedController = require('./MusilikedController');
 const RecommendController = require('./RecommendController');
 const HiddenRecommendationController = require('./HiddenRecommendationController');
@@ -225,6 +225,19 @@ app.get('/api/musiliked', async (req, res) => {
     res.json({ tracks });
   } catch (err) {
     res.status(500).json({ error: 'Could not fetch Musi-Liked tracks.' });
+  }
+});
+
+// Endpoint pour obtenir les morceaux populaires par artistes sélectionnés
+app.post('/api/spotify/popular-tracks-by-artists', async (req, res) => {
+  const { artistIds } = req.body;
+  if (!Array.isArray(artistIds) || artistIds.length === 0)
+    return res.status(400).json({ error: 'artistIds must be a non-empty array' });
+  try {
+    const tracks = await getPopularTracksByArtists(artistIds);
+    res.json({ tracks });
+  } catch (err) {
+    res.status(500).json({ error: 'Spotify track fetch failed' });
   }
 });
 

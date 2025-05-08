@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import API_URL from './api';
 import './SpotifySearchBar.css';
 import RecommendModal from './RecommendModal';
+import MusilikeButton from './MusilikeButton';
 
 function SpotifySearchBar({ onResults }) {
   const [query, setQuery] = useState('');
@@ -126,67 +127,11 @@ function SpotifySearchBar({ onResults }) {
                   >
                     <span role="img" aria-label="music">🎵</span> <span style={{ fontSize: '0.75em' }}>Recommend!</span>
                   </button>
-                  <button
-                    className={`like-btn ${musilikedIds.includes(track.id) ? 'liked' : 'unliked'}`}
-                    title={musilikedIds.includes(track.id) ? 'Remove Musi-Like' : 'Musi-Like this song!'}
-                    onClick={async () => {
-                      const token = localStorage.getItem('token');
-                      if (!token) {
-                        alert('Please log in to like tracks.');
-                        return;
-                      }
-                      try {
-                        if (!musilikedIds.includes(track.id)) {
-                          // Like
-                          const res = await fetch(`${API_URL}/api/musiliked`, {
-                            method: 'POST',
-                            headers: {
-                              'Content-Type': 'application/json',
-                              'Authorization': 'Bearer ' + token,
-                            },
-                            body: JSON.stringify({
-                              trackId: track.id,
-                              trackName: track.name,
-                              artists: track.artists ? track.artists.map(a => a.name) : [],
-                              albumName: track.album ? track.album.name : '',
-                              albumImage: track.album && track.album.images && track.album.images[0] ? track.album.images[0].url : '',
-                              spotifyUrl: track.external_urls ? track.external_urls.spotify : '',
-                              rawTrack: track,
-                            })
-                          });
-                          if (res.ok) {
-                            await refreshMusiliked();
-                          } else {
-                            const data = await res.json();
-                            alert('Error: ' + (data.error || 'Could not like track.'));
-                          }
-                        } else {
-                          // Unlike
-                          const res = await fetch(`${API_URL}/api/musiliked/${track.id}`, {
-                            method: 'DELETE',
-                            headers: {
-                              'Authorization': 'Bearer ' + token,
-                            },
-                          });
-                          if (res.ok) {
-                            await refreshMusiliked();
-                          } else {
-                            const data = await res.json();
-                            // If 404 (track not found), treat as success for UI
-                            if (res.status === 404) {
-                              await refreshMusiliked();
-                            } else {
-                              alert('Error: ' + (data.error || 'Could not unlike track.'));
-                            }
-                          }
-                        }
-                      } catch (err) {
-                        alert('Network error.');
-                      }
-                    }}
-                  >
-                    <span role="img" aria-label="thumb up">👍</span> <span style={{ fontSize: '0.75em' }}>{musilikedIds.includes(track.id) ? 'Musi-Liked' : 'Musi-Like'}</span>
-                  </button>
+                  <MusilikeButton
+  track={track}
+  musilikedIds={musilikedIds}
+  refreshMusilikedIds={refreshMusiliked}
+/>
                 </div>
               </li>
             ))}

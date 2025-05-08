@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import './RecommendationCard.css';
 import API_URL from './api';
+import MusilikeButton from './MusilikeButton';
 
-export default function RecommendationCard({ rec, musilikedIds, onLikeToggle, onHide, hidden }) {
+export default function RecommendationCard({ rec, musilikedIds, refreshMusilikedIds, onHide, hidden }) {
   // Reaction state for recipient
   const [reactionEmoji, setReactionEmoji] = useState('');
   const [reactionText, setReactionText] = useState('');
@@ -41,14 +42,7 @@ export default function RecommendationCard({ rec, musilikedIds, onLikeToggle, on
       alert('Network error');
     }
   };
-  const [loading, setLoading] = useState(false);
   const [folded, setFolded] = useState(false);
-
-  const handleLike = () => {
-    if (!rec.track) return;
-    const isLiked = musilikedIds.includes(rec.track.id);
-    onLikeToggle && onLikeToggle(rec.track, !isLiked);
-  }
 
   if (hidden && !folded) {
     // Animate fold-out
@@ -76,17 +70,11 @@ export default function RecommendationCard({ rec, musilikedIds, onLikeToggle, on
           ></iframe>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flex: 1 }}>
-          <button
-            className={`like-btn ${musilikedIds.includes(rec.track?.id) ? 'liked' : 'unliked'}`}
-            title={musilikedIds.includes(rec.track?.id) ? 'Remove Musi-Like' : 'Musi-Like this song!'}
-            onClick={() => {
-              if (!rec.track) return;
-              const isLiked = musilikedIds.includes(rec.track.id);
-              onLikeToggle && onLikeToggle(rec.track, !isLiked);
-            }}
-          >
-            <span role="img" aria-label="thumb up">👍</span> <span style={{ fontSize: '0.75em' }}>{musilikedIds.includes(rec.track?.id) ? 'Musi-Liked' : 'Musi-Like'}</span>
-          </button>
+          <MusilikeButton
+  track={rec.track}
+  musilikedIds={musilikedIds}
+  refreshMusilikedIds={refreshMusilikedIds}
+/>
           {/* Trash button below Musi-Like */}
           <button
             className="trash-btn"

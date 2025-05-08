@@ -147,8 +147,7 @@ export default function Inbox({ refreshFlag }) {
               <RecommendationCard
                 rec={rec}
                 musilikedIds={musilikedIds}
-                onLikeToggle={handleLikeToggle}
-                onRefreshMusilikedIds={refreshMusilikedIds}
+                refreshMusilikedIds={refreshMusilikedIds}
                 hidden={hiddenIds.includes(rec._id)}
                 onHide={handleHide}
               />

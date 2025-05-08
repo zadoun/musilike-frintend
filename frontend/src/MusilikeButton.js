@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import API_URL from './api';
 
-export default function MusilikeButton({ track, musilikedIds, refreshMusilikedIds }) {
+export default function MusilikeButton({ track, musilikedIds = [], refreshMusilikedIds }) {
   const [loading, setLoading] = useState(false);
   const isMusiliked = musilikedIds.includes(track.id);
 
@@ -48,7 +48,7 @@ export default function MusilikeButton({ track, musilikedIds, refreshMusilikedId
       title={isMusiliked ? 'Remove Musi-Like' : 'Musi-Like this song!'}
       style={{marginLeft: 8}}
     >
-      {isMusiliked ? 'Musi-Liked' : 'Musi-Like'}
+    🎵 {isMusiliked ? 'Liked !' : 'Like that !'}
     </button>
   );
 }

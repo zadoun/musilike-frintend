@@ -5852,4 +5852,33 @@ async function getMixedArtistsByGenre(genre) {
   return uniqueArtists;
 }
 
-module.exports = { searchSpotifyTracks, getPopularArtistsByGenre, getMixedArtistsByGenre };
+async function getTopTracksForArtist(artistId, market = 'FR') {
+  const fetch = (await import('node-fetch')).default;
+  const token = await getSpotifyToken();
+  const url = `https://api.spotify.com/v1/artists/${artistId}/top-tracks?market=${market}`;
+  const res = await fetch(url, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  const data = await res.json();
+  return data.tracks || [];
+}
+
+async function getPopularTracksByArtists(artistIds, market = 'FR') {
+  const allTracks = [];
+  for (const id of artistIds) {
+    const tracks = await getTopTracksForArtist(id, market);
+    // Map each track to include 'albumImage' property
+    const mappedTracks = tracks.map(track => ({
+      ...track,
+      albumImage: track.album && Array.isArray(track.album.images) && track.album.images.length > 0
+        ? track.album.images[0].url
+        : null
+    }));
+    allTracks.push(...mappedTracks);
+  }
+  // Supprime les doublons par track.id
+  const uniqueTracks = Array.from(new Map(allTracks.map(t => [t.id, t])).values());
+  return uniqueTracks;
+}
+
+module.exports = { searchSpotifyTracks, getPopularArtistsByGenre, getMixedArtistsByGenre, getPopularTracksByArtists };
