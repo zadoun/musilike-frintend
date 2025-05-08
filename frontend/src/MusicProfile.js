@@ -192,7 +192,7 @@ export default function MusicProfile() {
   return (
     <div className="music-profile-container">
       <div className="genre-selection" style={{marginBottom: 24}}>
-        <h3>Your favorite genres</h3>
+        <h3>Select your favorite genres</h3>
         <div style={{display: 'flex', flexWrap: 'wrap', gap: '12px'}}>
           {(() => {
   const genreIcons = {
@@ -256,7 +256,7 @@ export default function MusicProfile() {
 
         {/* Affichage artistes populaires (MIXTE) */}
         <div style={{marginTop: 24}}>
-          <h4>Your favorite artists</h4>
+          <h4>Select your favorite artists</h4>
           {loadingArtists ? (
             <div style={{fontSize: 13, color: '#888'}}>Chargement…</div>
           ) : popularArtists.length === 0 ? (
@@ -288,7 +288,7 @@ export default function MusicProfile() {
 
       {/* Affichage morceaux populaires pour les artistes sélectionnés */}
       <div style={{marginTop: 32}}>
-        <h4>Your favorite tracks</h4>
+        <h4>Select your favorite tracks</h4>
         {favTracksError ? (
           <div style={{fontSize: 13, color: 'red'}}>{favTracksError}</div>
         ) : loadingFavTracks ? (
@@ -296,18 +296,53 @@ export default function MusicProfile() {
         ) : favouriteTracks.length === 0 ? (
           <div style={{fontSize: 13, color: '#888'}}>Aucun morceau à afficher</div>
         ) : (
-          <ul className="music-profile-list">
-            {favouriteTracks.map((track, i) => (
-              <li key={track.id} className="music-profile-track" style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
-                <div>{i + 1}. {track.name} — {track.artists && track.artists.map(a => a.name).join(', ')}</div>
-                <MusilikeButton
-                  track={track}
-                  musilikedIds={musilikedIds}
-                  refreshMusilikedIds={refreshMusilikedIds}
-                />
-              </li>
-            ))}
-          </ul>
+          <div style={{display: 'flex', flexWrap: 'wrap', gap: '14px'}}>
+            {favouriteTracks.map(track => (
+  <div
+    key={track.id}
+    style={{
+      display: 'flex',
+      alignItems: 'flex-start',
+      background: '#f6f6f6',
+      borderRadius: 8,
+      padding: '10px 14px',
+      minWidth: 0,
+      marginBottom: 4,
+      gap: 12,
+      fontWeight: 600,
+      maxWidth: 340,
+      minHeight: 54,
+      border: '2px solid transparent',
+      transition: 'all 0.15s',
+      boxSizing: 'border-box'
+    }}
+    title={track.name}
+  >
+    <img
+      src={track.albumImage || 'https://via.placeholder.com/36?text=%20'}
+      alt={track.albumName || 'No album'}
+      style={{width: 36, height: 36, objectFit: 'cover', borderRadius: '50%', marginRight: 8, background: '#eee'}}
+    />
+    <span style={{
+      whiteSpace: 'normal',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      maxWidth: 220,
+      color: '#111',
+      display: 'inline-block',
+      wordBreak: 'break-word',
+      fontSize: 15,
+      lineHeight: 1.3,
+      marginLeft: 10
+    }}>{track.trackName || track.name}</span>
+    <MusilikeButton
+      track={track}
+      musilikedIds={musilikedIds}
+      refreshMusilikedIds={refreshMusilikedIds}
+    />
+  </div>
+))}
+          </div>
         )}
       </div>
 
@@ -315,25 +350,43 @@ export default function MusicProfile() {
       {tracks.length === 0 ? (
         <div className="music-profile-empty">You haven't Musi-Liked any tracks yet.</div>
       ) : (
-        <ul className="music-profile-list">
-          {tracks.map((t, i) => (
-            <li key={t._id || t.trackId} className="music-profile-track">
-              <div className="music-profile-index">{i + 1}</div>
-              <img className="music-profile-album" src={t.albumImage} alt={t.albumName} />
-              <div className="music-profile-info">
-                <div className="music-profile-trackname">{t.trackName}</div>
-                <div className="music-profile-artist">{t.artists && t.artists.join(', ')}</div>
-                <div className="music-profile-albumname">{t.albumName}</div>
-              </div>
-              <a href={t.spotifyUrl} target="_blank" rel="noopener noreferrer" className="music-profile-play-btn" title="Play on Spotify">
-                <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="11" cy="11" r="11" fill="none"/>
-                  <polygon points="8,6 16,11 8,16" fill="#fff"/>
-                </svg>
-              </a>
-            </li>
+        <div style={{display: 'flex', flexWrap: 'wrap', gap: '14px'}}>
+          {tracks.map(track => (
+            <div
+              key={track.trackId || track.id}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                background: '#B2F5EA',
+                borderRadius: 8,
+                padding: '4px 10px',
+                cursor: 'pointer',
+                minWidth: 0,
+                border: '2px solid #319795',
+                marginBottom: 4,
+                gap: 8,
+                fontWeight: 600,
+                maxWidth: 320
+              }}
+              title={track.name}
+            >
+              <img src={track.albumImage || 'https://via.placeholder.com/36?text=%20'} alt={track.albumName || 'No album'} style={{width: 36, height: 36, objectFit: 'cover', borderRadius: '50%', marginRight: 8, background: '#eee'}} />
+              <span style={{
+  whiteSpace: 'normal',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  maxWidth: 220,
+  color: '#111',
+  display: 'inline-block',
+  wordBreak: 'break-word',
+  fontSize: 15,
+  lineHeight: 1.3,
+  marginLeft: 10
+}}>{track.trackName || track.name}</span>
+              
+            </div>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );
