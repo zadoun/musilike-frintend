@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import API_URL from './api';
 import './MusicProfile.css';
 import SPOTIFY_GENRES from './spotifyGenres';
+import MusilikeButton from './MusilikeButton';
 
 export default function MusicProfile() {
   const [tracks, setTracks] = useState([]);
@@ -31,7 +32,26 @@ export default function MusicProfile() {
   const [popularArtists, setPopularArtists] = useState([]);
   const [loadingArtists, setLoadingArtists] = useState(false);
   const [selectedArtists, setSelectedArtists] = useState([]);
+  const [favouriteTracks, setFavouriteTracks] = useState([]);
+  const [loadingFavTracks, setLoadingFavTracks] = useState(false);
+  const [favTracksError, setFavTracksError] = useState('');
+  const [musilikedIds, setMusilikedIds] = useState([]);
   const initialLoadRef = React.useRef(true);
+
+  // Refresh musilikedIds from backend
+  const refreshMusilikedIds = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    try {
+      const res = await fetch(`${API_URL}/api/musiliked`, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setMusilikedIds(Array.isArray(data.tracks) ? data.tracks.map(t => t.trackId) : []);
+      }
+    } catch {}
+  };
 
   // Charger les genres ET artistes déjà enregistrés au montage
   useEffect(() => {
@@ -51,6 +71,7 @@ export default function MusicProfile() {
         initialLoadRef.current = false;
       })
       .catch(() => { initialLoadRef.current = false; });
+    refreshMusilikedIds();
   }, []);
 
   // Sauvegarde automatique des genres à chaque changement (sauf au premier chargement)
@@ -96,6 +117,34 @@ export default function MusicProfile() {
       return () => clearTimeout(timer);
     }
   }, [saveStatus]);
+
+  // Fetch popular tracks for selected artists
+  useEffect(() => {
+    if (!selectedArtists || selectedArtists.length === 0) {
+      setFavouriteTracks([]);
+      setFavTracksError('');
+      return;
+    }
+    setLoadingFavTracks(true);
+    setFavTracksError('');
+    fetch(`${API_URL}/api/spotify/popular-tracks-by-artists`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + (localStorage.getItem('token') || '')
+      },
+      body: JSON.stringify({ artistIds: selectedArtists })
+    })
+      .then(res => res.ok ? res.json() : Promise.reject())
+      .then(data => {
+        setFavouriteTracks(data.tracks || []);
+        setLoadingFavTracks(false);
+      })
+      .catch(() => {
+        setFavTracksError('Erreur lors du chargement des morceaux populaires');
+        setLoadingFavTracks(false);
+      });
+  }, [selectedArtists]);
 
   // Charge la liste mixte (statique + Spotify) pour les genres sélectionnés
   useEffect(() => {
@@ -165,7 +214,7 @@ export default function MusicProfile() {
 
         {/* Affichage artistes populaires (MIXTE) */}
         <div style={{marginTop: 24}}>
-          <h4>Artistes populaires de vos genres</h4>
+          <h4>Your favorite artists</h4>
           {loadingArtists ? (
             <div style={{fontSize: 13, color: '#888'}}>Chargement…</div>
           ) : popularArtists.length === 0 ? (
@@ -194,6 +243,32 @@ export default function MusicProfile() {
           )}
         </div>
       </div>
+
+      {/* Affichage morceaux populaires pour les artistes sélectionnés */}
+      <div style={{marginTop: 32}}>
+        <h4>Your favorite tracks</h4>
+        {favTracksError ? (
+          <div style={{fontSize: 13, color: 'red'}}>{favTracksError}</div>
+        ) : loadingFavTracks ? (
+          <div style={{fontSize: 13, color: '#888'}}>Chargement…</div>
+        ) : favouriteTracks.length === 0 ? (
+          <div style={{fontSize: 13, color: '#888'}}>Aucun morceau à afficher</div>
+        ) : (
+          <ul className="music-profile-list">
+            {favouriteTracks.map((track, i) => (
+              <li key={track.id} className="music-profile-track" style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+                <div>{i + 1}. {track.name} — {track.artists && track.artists.map(a => a.name).join(', ')}</div>
+                <MusilikeButton
+                  track={track}
+                  musilikedIds={musilikedIds}
+                  refreshMusilikedIds={refreshMusilikedIds}
+                />
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
       <h2 className="music-profile-title">Your Musi-Liked Tracks</h2>
       {tracks.length === 0 ? (
         <div className="music-profile-empty">You haven't Musi-Liked any tracks yet.</div>
