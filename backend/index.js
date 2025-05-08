@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const mongoose = require('mongoose');
 const User = require('./models/User');
-const { searchSpotifyTracks } = require('./spotify');
+const { searchSpotifyTracks, getPopularArtistsByGenre, getMixedArtistsByGenre } = require('./spotify');
 const MusilikedController = require('./MusilikedController');
 const RecommendController = require('./RecommendController');
 const HiddenRecommendationController = require('./HiddenRecommendationController');
@@ -112,6 +112,56 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+// Update liked genres (protected)
+app.put('/api/profile/genres', async (req, res) => {
+  const auth = req.headers.authorization;
+  if (!auth) return res.status(401).json({ error: 'No token provided.' });
+  const token = auth.split(' ')[1];
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev_secret');
+    const user = await User.findOne({ email: decoded.email });
+    if (!user) return res.status(404).json({ error: 'User not found.' });
+    const { genres } = req.body;
+    if (!Array.isArray(genres)) return res.status(400).json({ error: 'Genres must be an array.' });
+    user.musiliked_genres = genres;
+    await user.save();
+    res.json({ message: 'Genres updated.', musiliked_genres: user.musiliked_genres });
+  } catch (err) {
+    res.status(500).json({ error: 'Could not update genres.' });
+  }
+});
+
+// --- Nouvel endpoint : artistes mixtes (statique + Spotify) par genre ---
+app.get('/api/spotify/mixed-artists-by-genre', async (req, res) => {
+  const genre = req.query.genre;
+  if (!genre) return res.status(400).json({ error: 'Genre required.' });
+  try {
+    const artists = await getMixedArtistsByGenre(genre);
+    res.json(artists);
+  } catch (err) {
+    res.status(500).json({ error: 'Could not fetch mixed artists.' });
+  }
+});
+
+// Update liked artistes (protected)
+app.put('/api/profile/artistes', async (req, res) => {
+  const auth = req.headers.authorization;
+  if (!auth) return res.status(401).json({ error: 'No token provided.' });
+  const token = auth.split(' ')[1];
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev_secret');
+    const user = await User.findOne({ email: decoded.email });
+    if (!user) return res.status(404).json({ error: 'User not found.' });
+    const { artistes } = req.body;
+    if (!Array.isArray(artistes)) return res.status(400).json({ error: 'Artistes must be an array.' });
+    user.musiliked_artistes = artistes;
+    await user.save();
+    res.json({ message: 'Artistes updated.', musiliked_artistes: user.musiliked_artistes });
+  } catch (err) {
+    res.status(500).json({ error: 'Could not update artistes.' });
+  }
+});
+
 // Get profile (protected)
 app.get('/api/profile', async (req, res) => {
   const auth = req.headers.authorization;
@@ -121,7 +171,7 @@ app.get('/api/profile', async (req, res) => {
     const decoded = jwt.verify(token, JWT_SECRET);
     const user = await User.findOne({ email: decoded.email });
     if (!user) return res.status(404).json({ error: 'User not found.' });
-    res.json({ email: user.email, username: user.username, _id: user._id });
+    res.json({ email: user.email, username: user.username, _id: user._id, musiliked_genres: user.musiliked_genres, musiliked_artistes: user.musiliked_artistes });
   } catch (err) {
     res.status(401).json({ error: 'Invalid token.' });
   }
@@ -136,7 +186,7 @@ app.get('/api/profile', async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev_secret');
     const user = await User.findOne({ email: decoded.email });
     if (!user) return res.status(404).json({ error: 'User not found.' });
-    res.json({ email: user.email, username: user.username, _id: user._id });
+    res.json({ email: user.email, username: user.username, _id: user._id, musiliked_genres: user.musiliked_genres, musiliked_artistes: user.musiliked_artistes });
   } catch (err) {
     res.status(401).json({ error: 'Invalid token.' });
   }
@@ -175,6 +225,18 @@ app.get('/api/musiliked', async (req, res) => {
     res.json({ tracks });
   } catch (err) {
     res.status(500).json({ error: 'Could not fetch Musi-Liked tracks.' });
+  }
+});
+
+// Endpoint pour artistes populaires par genre
+app.get('/api/spotify/artists-by-genre', async (req, res) => {
+  const genre = req.query.genre;
+  if (!genre) return res.status(400).json({ error: 'Missing genre' });
+  try {
+    const artists = await getPopularArtistsByGenre(genre);
+    res.json({ artists });
+  } catch (err) {
+    res.status(500).json({ error: 'Spotify artist fetch failed' });
   }
 });
 

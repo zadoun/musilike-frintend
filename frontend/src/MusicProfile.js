@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import API_URL from './api';
 import './MusicProfile.css';
+import SPOTIFY_GENRES from './spotifyGenres';
 
 export default function MusicProfile() {
   const [tracks, setTracks] = useState([]);
@@ -24,11 +25,175 @@ export default function MusicProfile() {
       });
   }, []);
 
+  // State pour la sélection des genres
+  const [selectedGenres, setSelectedGenres] = useState([]);
+  const [saveStatus, setSaveStatus] = useState('');
+  const [popularArtists, setPopularArtists] = useState([]);
+  const [loadingArtists, setLoadingArtists] = useState(false);
+  const [selectedArtists, setSelectedArtists] = useState([]);
+  const initialLoadRef = React.useRef(true);
+
+  // Charger les genres ET artistes déjà enregistrés au montage
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    fetch(`${API_URL}/api/profile`, {
+      headers: { 'Authorization': 'Bearer ' + token }
+    })
+      .then(res => res.ok ? res.json() : Promise.reject())
+      .then(data => {
+        if (data.musiliked_genres && Array.isArray(data.musiliked_genres)) {
+          setSelectedGenres(data.musiliked_genres);
+        }
+        if (data.musiliked_artistes && Array.isArray(data.musiliked_artistes)) {
+          setSelectedArtists(data.musiliked_artistes);
+        }
+        initialLoadRef.current = false;
+      })
+      .catch(() => { initialLoadRef.current = false; });
+  }, []);
+
+  // Sauvegarde automatique des genres à chaque changement (sauf au premier chargement)
+  useEffect(() => {
+    if (initialLoadRef.current) return;
+    if (!selectedGenres) return;
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    setSaveStatus('');
+    fetch(`${API_URL}/api/profile/genres`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token,
+      },
+      body: JSON.stringify({ genres: selectedGenres })
+    })
+      .then(res => res.ok ? res.json() : Promise.reject())
+      .then(() => setSaveStatus('Saved'))
+      .catch(() => setSaveStatus('Error'));
+  }, [selectedGenres]);
+
+  // Sauvegarde automatique des artistes à chaque changement (sauf au premier chargement)
+  useEffect(() => {
+    if (initialLoadRef.current) return;
+    if (!selectedArtists) return;
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    fetch(`${API_URL}/api/profile/artistes`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token,
+      },
+      body: JSON.stringify({ artistes: selectedArtists })
+    });
+  }, [selectedArtists]);
+
+  // Cache le message 'Genres saved!' après 2 secondes
+  useEffect(() => {
+    if (saveStatus === 'Saved') {
+      const timer = setTimeout(() => setSaveStatus(''), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [saveStatus]);
+
+  // Charge la liste mixte (statique + Spotify) pour les genres sélectionnés
+  useEffect(() => {
+    if (!selectedGenres || selectedGenres.length === 0) {
+      setPopularArtists([]);
+      return;
+    }
+    setLoadingArtists(true);
+    // Appels parallèles pour chaque genre (endpoint MIXTE)
+    Promise.all(selectedGenres.map(genre =>
+      fetch(`${API_URL}/api/spotify/mixed-artists-by-genre?genre=${encodeURIComponent(genre)}`)
+        .then(res => res.ok ? res.json() : Promise.reject())
+        .then(data => (data.artists || data || []))
+        .catch(() => [])
+    )).then(results => {
+      // Fusionne les artistes (évite doublons par id ou par nom)
+      const all = [].concat(...results);
+      const seen = new Set();
+      const unique = all.filter(a => {
+        const key = (a.id || '').toLowerCase() + '|' + (a.name || '').toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+      setPopularArtists(unique);
+      setLoadingArtists(false);
+    });
+  }, [selectedGenres]);
+
+  // Pour ne pas afficher le message au chargement initial
+  const hasChangedRef = React.useRef(false);
+
+  const handleGenreChange = (genre) => {
+    hasChangedRef.current = true;
+    setSelectedGenres(prev =>
+      prev.includes(genre)
+        ? prev.filter(g => g !== genre)
+        : [...prev, genre]
+    );
+  };
+
   if (loading) return <div className="music-profile-loading">Loading...</div>;
   if (error) return <div className="music-profile-error">{error}</div>;
 
   return (
     <div className="music-profile-container">
+      <div className="genre-selection" style={{marginBottom: 24}}>
+        <h3>Your favorite genres</h3>
+        <div style={{display: 'flex', flexWrap: 'wrap', gap: '12px'}}>
+          {SPOTIFY_GENRES.map(genre => (
+            <label key={genre} style={{display: 'flex', alignItems: 'center', gap: 4, background: selectedGenres.includes(genre) ? '#b2f5ea' : '#eee', borderRadius: 8, padding: '4px 10px', cursor: 'pointer', color: '#111'}}>
+              <input
+                type="checkbox"
+                checked={selectedGenres.includes(genre)}
+                onChange={() => handleGenreChange(genre)}
+                style={{marginRight: 4}}
+              />
+              {genre}
+            </label>
+          ))}
+        </div>
+        {hasChangedRef.current && saveStatus && (
+          <div style={{marginTop: 8, fontSize: 13, color: saveStatus === 'Saved' ? 'green' : 'red'}}>
+            {saveStatus === 'Saved' ? 'Genres saved!' : 'Error saving genres'}
+          </div>
+        )}
+
+        {/* Affichage artistes populaires (MIXTE) */}
+        <div style={{marginTop: 24}}>
+          <h4>Artistes populaires de vos genres</h4>
+          {loadingArtists ? (
+            <div style={{fontSize: 13, color: '#888'}}>Chargement…</div>
+          ) : popularArtists.length === 0 ? (
+            <div style={{fontSize: 13, color: '#888'}}>Aucun artiste à afficher</div>
+          ) : (
+            <div style={{display: 'flex', flexWrap: 'wrap', gap: '14px'}}>
+              {popularArtists.map(artist => {
+                const isSelected = selectedArtists.includes(artist.id);
+                return (
+                  <div key={artist.id} style={{display: 'flex', alignItems: 'center', background: isSelected ? '#b2f5ea' : '#f6f6f6', borderRadius: 8, padding: '4px 10px', cursor: 'pointer', minWidth: 0, border: isSelected ? '2px solid #319795' : '2px solid transparent'}}
+                    title={artist.name}
+                    onClick={() => {
+                      setSelectedArtists(prev => prev.includes(artist.id) ? prev.filter(id => id !== artist.id) : [...prev, artist.id]);
+                    }}>
+                    {artist.images && artist.images.length > 0 && (
+                      <img src={artist.images[0].url} alt={artist.name} style={{width: 36, height: 36, objectFit: 'cover', borderRadius: '50%', marginRight: 8}} />
+                    )}
+                    <span style={{whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 120, color: '#111'}}>{artist.name}</span>
+                    <a href={artist.spotifyUrl} target="_blank" rel="noopener noreferrer" style={{marginLeft: 8, color: '#1db954', fontWeight: 600, textDecoration: 'none', fontSize: 16}} title="Voir sur Spotify" onClick={e => e.stopPropagation()}>
+                      ♫
+                    </a>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
       <h2 className="music-profile-title">Your Musi-Liked Tracks</h2>
       {tracks.length === 0 ? (
         <div className="music-profile-empty">You haven't Musi-Liked any tracks yet.</div>
