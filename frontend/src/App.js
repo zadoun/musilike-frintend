@@ -7,6 +7,7 @@ import Inbox from './Inbox';
 import SentRecommendations from './SentRecommendations';
 import MusicProfile from './MusicProfile';
 import MusicPreferences from './MusicPreferences';
+import PersonalProfile from './PersonalProfile';
 import Compatibility from './Compatibility';
 import { io } from 'socket.io-client';
 import API_URL from './api';
@@ -135,7 +136,7 @@ function App() {
         <Auth onAuth={setUser} />
       ) : (
         <div style={{ position: 'relative', minHeight: '100vh' }}>
-          <HamburgerMenu onLogout={handleLogout} onPreferences={() => setPage('preferences')} />
+          <HamburgerMenu onLogout={handleLogout} onPreferences={() => setPage('preferences')} onPersonalProfile={() => setPage('personal-profile')} />
           <h2>Hi {user.username}!</h2>
           <nav style={{marginBottom: 24}}>
   <div className="top-menu">
@@ -164,6 +165,7 @@ function App() {
           {page === 'search' && <SpotifySearchBar onMusilikedChange={toggleMusilikedRefreshFlag} />}
           {page === 'playlist' && <MusicProfile musilikedRefreshFlag={musilikedRefreshFlag} />}
           {page === 'preferences' && <MusicPreferences />}
+          {page === 'personal-profile' && <PersonalProfile />}
           {page === 'compatibility' && user && user._id && <Compatibility currentUserId={user._id} />}
           {page === 'inbox' && <Inbox userId={user._id} refreshFlag={refreshInboxFlag} />}
           {page === 'sent' && <SentRecommendations userId={user._id} />}
