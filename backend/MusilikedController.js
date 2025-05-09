@@ -4,11 +4,13 @@ const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret';
 
-// Default weight configuration for compatibility scoring
+// Flexible weight configuration for compatibility scoring
 const COMPATIBILITY_WEIGHTS = {
-  track: 0.4,   // Importance of shared tracks
-  artist: 0.3,  // Importance of shared artists
-  genre: 0.3    // Importance of shared genres
+  track: 0.2,                // Shared track overlap
+  trackArtist: 0.2,          // Shared artist in Musi-Liked tracks
+  trackGenre: 0.2,           // Shared genre in Musi-Liked tracks
+  profileArtist: 0.2,        // Shared artist at profile level
+  profileGenre: 0.2          // Shared genre at profile level
 };
 
 // GET /api/musiliked - Get all Musi-Liked tracks for the logged-in user
@@ -166,67 +168,93 @@ exports.getCompatibility = async (req, res) => {
   const { userA, userB } = req.query;
   if (!userA || !userB) return res.status(400).json({ error: 'Missing user IDs' });
   // Allow weights via query params, fallback to defaults
-  const trackWeight = req.query.trackWeight !== undefined ? parseFloat(req.query.trackWeight) : COMPATIBILITY_WEIGHTS.track;
-  const artistWeight = req.query.artistWeight !== undefined ? parseFloat(req.query.artistWeight) : COMPATIBILITY_WEIGHTS.artist;
-  const genreWeight = req.query.genreWeight !== undefined ? parseFloat(req.query.genreWeight) : COMPATIBILITY_WEIGHTS.genre;
-  const totalWeight = trackWeight + artistWeight + genreWeight;
-  // Normalize if needed
-  const normTrackWeight = trackWeight / totalWeight;
-  const normArtistWeight = artistWeight / totalWeight;
-  const normGenreWeight = genreWeight / totalWeight;
+  const weights = {
+    track: req.query.trackWeight !== undefined ? parseFloat(req.query.trackWeight) : COMPATIBILITY_WEIGHTS.track,
+    trackArtist: req.query.trackArtistWeight !== undefined ? parseFloat(req.query.trackArtistWeight) : COMPATIBILITY_WEIGHTS.trackArtist,
+    trackGenre: req.query.trackGenreWeight !== undefined ? parseFloat(req.query.trackGenreWeight) : COMPATIBILITY_WEIGHTS.trackGenre,
+    profileArtist: req.query.profileArtistWeight !== undefined ? parseFloat(req.query.profileArtistWeight) : COMPATIBILITY_WEIGHTS.profileArtist,
+    profileGenre: req.query.profileGenreWeight !== undefined ? parseFloat(req.query.profileGenreWeight) : COMPATIBILITY_WEIGHTS.profileGenre,
+  };
+  const totalWeight = Object.values(weights).reduce((sum, w) => sum + w, 0);
+  for (const key in weights) weights[key] = weights[key] / totalWeight;
 
   try {
-    // Get all musiliked tracks for both users
-    const [tracksA, tracksB] = await Promise.all([
-      Musiliked.find({ user: userA }),
-      Musiliked.find({ user: userB })
-    ]);
-    // Track ID overlap
-    const idsA = new Set(tracksA.map(t => t.trackId));
-    const idsB = new Set(tracksB.map(t => t.trackId));
-    const sharedTrackIds = [...idsA].filter(id => idsB.has(id));
-    const sharedTracks = tracksA.filter(t => sharedTrackIds.includes(t.trackId));
-    // Artist overlap
-    const artistsA = new Set(tracksA.flatMap(t => t.artists || []));
-    const artistsB = new Set(tracksB.flatMap(t => t.artists || []));
-    const sharedArtists = [...artistsA].filter(artist => artistsB.has(artist));
-    // Genre overlap (from user.musiliked_genres)
-    const User = require('./models/User');
-    const userAObj = await User.findById(userA);
-    const userBObj = await User.findById(userB);
-    const genresA = new Set(Array.isArray(userAObj?.musiliked_genres) ? userAObj.musiliked_genres : []);
-    const genresB = new Set(Array.isArray(userBObj?.musiliked_genres) ? userBObj.musiliked_genres : []);
-    const sharedGenres = [...genresA].filter(genre => genresB.has(genre));
-    // Compatibility scores
-    const trackScore = sharedTrackIds.length / (new Set([...idsA, ...idsB]).size || 1);
-    const artistScore = sharedArtists.length / (new Set([...artistsA, ...artistsB]).size || 1);
-    const genreScore = sharedGenres.length / (new Set([...genresA, ...genresB]).size || 1);
-    const weightedScore = (trackScore * normTrackWeight) + (artistScore * normArtistWeight) + (genreScore * normGenreWeight);
-    res.json({
-      sharedTrackIds,
-      sharedTracks,
-      sharedArtists,
-      sharedGenres,
-      scores: {
-        trackScore,
-        artistScore,
-        genreScore,
-        weightedScore,
-        weights: {
-          track: normTrackWeight,
-          artist: normArtistWeight,
-          genre: normGenreWeight
-        }
-      },
-      count: {
-        sharedTracks: sharedTrackIds.length,
-        sharedArtists: sharedArtists.length,
-        sharedGenres: sharedGenres.length
-      }
-    });
+    const result = await module.exports.calculateCompatibilityFlexible(userA, userB, weights);
+    res.json(result);
   } catch (err) {
     res.status(500).json({ error: 'Could not calculate compatibility.' });
   }
+};
+
+// Flexible compatibility calculation helper (for RecommendController and API)
+exports.calculateCompatibilityFlexible = async (userA, userB, weights = COMPATIBILITY_WEIGHTS) => {
+  const Musiliked = require('./models/Musiliked');
+  const User = require('./models/User');
+  // Get all musiliked tracks for both users
+  const [tracksA, tracksB] = await Promise.all([
+    Musiliked.find({ user: userA }),
+    Musiliked.find({ user: userB })
+  ]);
+  // Track ID overlap
+  const idsA = new Set(tracksA.map(t => t.trackId));
+  const idsB = new Set(tracksB.map(t => t.trackId));
+  const sharedTrackIds = [...idsA].filter(id => idsB.has(id));
+  // Get full track objects for shared tracks (from userA's tracks for consistency)
+  const sharedTracks = tracksA.filter(t => sharedTrackIds.includes(t.trackId));
+  // Track-level artists and genres
+  const trackArtistsA = new Set(tracksA.flatMap(t => t.artists || []));
+  const trackArtistsB = new Set(tracksB.flatMap(t => t.artists || []));
+  const sharedTrackArtists = [...trackArtistsA].filter(a => trackArtistsB.has(a));
+  // For genres, if tracks have a genres field, otherwise fallback to []
+  const trackGenresA = new Set(tracksA.flatMap(t => t.genres || []));
+  const trackGenresB = new Set(tracksB.flatMap(t => t.genres || []));
+  const sharedTrackGenres = [...trackGenresA].filter(g => trackGenresB.has(g));
+  // Profile-level artists and genres
+  const userAObj = await User.findById(userA);
+  const userBObj = await User.findById(userB);
+  const profileArtistsA = new Set(Array.isArray(userAObj?.musiliked_artistes) ? userAObj.musiliked_artistes : []);
+  const profileArtistsB = new Set(Array.isArray(userBObj?.musiliked_artistes) ? userBObj.musiliked_artistes : []);
+  const sharedProfileArtists = [...profileArtistsA].filter(a => profileArtistsB.has(a));
+  const profileGenresA = new Set(Array.isArray(userAObj?.musiliked_genres) ? userAObj.musiliked_genres : []);
+  const profileGenresB = new Set(Array.isArray(userBObj?.musiliked_genres) ? userBObj.musiliked_genres : []);
+  const sharedProfileGenres = [...profileGenresA].filter(g => profileGenresB.has(g));
+  // Normalized scores
+  const trackScore = sharedTrackIds.length / (new Set([...idsA, ...idsB]).size || 1);
+  const trackArtistScore = sharedTrackArtists.length / (new Set([...trackArtistsA, ...trackArtistsB]).size || 1);
+  const trackGenreScore = sharedTrackGenres.length / (new Set([...trackGenresA, ...trackGenresB]).size || 1);
+  const profileArtistScore = sharedProfileArtists.length / (new Set([...profileArtistsA, ...profileArtistsB]).size || 1);
+  const profileGenreScore = sharedProfileGenres.length / (new Set([...profileGenresA, ...profileGenresB]).size || 1);
+  // Weighted sum
+  const weightedScore =
+    (trackScore * weights.track) +
+    (trackArtistScore * weights.trackArtist) +
+    (trackGenreScore * weights.trackGenre) +
+    (profileArtistScore * weights.profileArtist) +
+    (profileGenreScore * weights.profileGenre);
+  return {
+    sharedTrackIds,
+    sharedTracks, // <-- full track objects
+    sharedTrackArtists,
+    sharedTrackGenres,
+    sharedProfileArtists,
+    sharedProfileGenres,
+    scores: {
+      trackScore,
+      trackArtistScore,
+      trackGenreScore,
+      profileArtistScore,
+      profileGenreScore,
+      weightedScore,
+      weights
+    },
+    count: {
+      sharedTracks: sharedTrackIds.length,
+      sharedTrackArtists: sharedTrackArtists.length,
+      sharedTrackGenres: sharedTrackGenres.length,
+      sharedProfileArtists: sharedProfileArtists.length,
+      sharedProfileGenres: sharedProfileGenres.length
+    }
+  };
 };
 
 // DELETE /api/musiliked/:trackId - Remove a Musi-Liked track for the logged-in user

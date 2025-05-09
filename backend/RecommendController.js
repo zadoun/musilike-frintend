@@ -24,11 +24,10 @@ const listUsers = async (req, res) => {
     const users = await User.find({ _id: { $ne: user._id } }, { password: 0 });
     // For each user, compute compatibility score with the current user
     const usersWithCompatibility = await Promise.all(users.map(async (otherUser) => {
-      // Use the same logic as MusilikedController.getCompatibility
       try {
-        // Directly call the compatibility logic
-        const { weightedScore } = await MusilikedController.calculateCompatibility(user._id, otherUser._id);
-        return { ...otherUser.toObject(), compatibilityScore: Math.round(weightedScore * 100) };
+        // Use the new flexible compatibility logic
+        const { scores } = await MusilikedController.calculateCompatibilityFlexible(user._id, otherUser._id);
+        return { ...otherUser.toObject(), compatibilityScore: Math.round(scores.weightedScore * 100) };
       } catch (e) {
         return { ...otherUser.toObject(), compatibilityScore: null };
       }
