@@ -50,10 +50,22 @@ MusilikedController.calculateCompatibility = async (userA, userB) => {
   const trackWeight = COMPATIBILITY_WEIGHTS.track;
   const artistWeight = COMPATIBILITY_WEIGHTS.artist;
   const genreWeight = COMPATIBILITY_WEIGHTS.genre;
-  const totalWeight = trackWeight + artistWeight + genreWeight;
-  const normTrackWeight = trackWeight / totalWeight;
-  const normArtistWeight = artistWeight / totalWeight;
-  const normGenreWeight = genreWeight / totalWeight;
+  // Check if either user has no genres
+  const hasGenresA = genresA.size > 0;
+  const hasGenresB = genresB.size > 0;
+  let normTrackWeight, normArtistWeight, normGenreWeight;
+  if (hasGenresA && hasGenresB) {
+    const totalWeight = trackWeight + artistWeight + genreWeight;
+    normTrackWeight = trackWeight / totalWeight;
+    normArtistWeight = artistWeight / totalWeight;
+    normGenreWeight = genreWeight / totalWeight;
+  } else {
+    // Ignore genre weight, renormalize
+    const totalWeight = trackWeight + artistWeight;
+    normTrackWeight = trackWeight / totalWeight;
+    normArtistWeight = artistWeight / totalWeight;
+    normGenreWeight = 0;
+  }
 
   // Get all musiliked tracks for both users
   const [tracksA, tracksB] = await Promise.all([
@@ -74,11 +86,15 @@ MusilikedController.calculateCompatibility = async (userA, userB) => {
   const userBObj = await User.findById(userB);
   const genresA = new Set(Array.isArray(userAObj?.musiliked_genres) ? userAObj.musiliked_genres : []);
   const genresB = new Set(Array.isArray(userBObj?.musiliked_genres) ? userBObj.musiliked_genres : []);
-  const sharedGenres = [...genresA].filter(genre => genresB.has(genre));
+  let sharedGenres = [];
+  let genreScore = 0;
+  if (hasGenresA && hasGenresB) {
+    sharedGenres = [...genresA].filter(genre => genresB.has(genre));
+    genreScore = sharedGenres.length / (new Set([...genresA, ...genresB]).size || 1);
+  }
   // Compatibility scores
   const trackScore = sharedTrackIds.length / (new Set([...idsA, ...idsB]).size || 1);
   const artistScore = sharedArtists.length / (new Set([...artistsA, ...artistsB]).size || 1);
-  const genreScore = sharedGenres.length / (new Set([...genresA, ...genresB]).size || 1);
   const weightedScore = (trackScore * normTrackWeight) + (artistScore * normArtistWeight) + (genreScore * normGenreWeight);
   return { weightedScore };
 };

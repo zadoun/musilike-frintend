@@ -5,6 +5,7 @@ const MusilikedSchema = new mongoose.Schema({
   trackId: { type: String, required: true }, // Spotify track ID
   trackName: String,
   artists: [String],
+  genres: [String], // Explicitly added for Spotify genres
   albumName: String,
   albumImage: String,
   spotifyUrl: String,

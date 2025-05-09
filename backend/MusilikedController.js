@@ -6,10 +6,10 @@ const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret';
 
 // Flexible weight configuration for compatibility scoring
 const COMPATIBILITY_WEIGHTS = {
-  track: 0.2,                // Shared track overlap
+  track: 0.3,                // Shared track overlap
   trackArtist: 0.2,          // Shared artist in Musi-Liked tracks
   trackGenre: 0.2,           // Shared genre in Musi-Liked tracks
-  profileArtist: 0.2,        // Shared artist at profile level
+  profileArtist: 0.1,        // Shared artist at profile level
   profileGenre: 0.2          // Shared genre at profile level
 };
 
@@ -51,6 +51,24 @@ exports.getMusilikedForUser = async (req, res) => {
   }
 };
 
+// Helper function to fetch genres from Spotify API for given artist IDs
+async function getGenresFromSpotify(artistIds, accessToken) {
+  const axios = require('axios');
+  const SPOTIFY_API_BASE = process.env.SPOTIFY_API_BASE || 'https://api.spotify.com/v1';
+  let genresSet = new Set();
+  for (const artistId of artistIds) {
+    try {
+      const resp = await axios.get(`${SPOTIFY_API_BASE}/artists/${artistId}`, {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+      (resp.data.genres || []).forEach(g => genresSet.add(g));
+    } catch (err) {
+      console.error(`Error fetching genres for artist ${artistId}:`, err.response?.data || err.message);
+    }
+  }
+  return Array.from(genresSet);
+}
+
 // POST /api/musiliked - Add a Musi-Liked track for the logged-in user
 exports.addMusiliked = async (req, res) => {
   const auth = req.headers.authorization;
@@ -70,11 +88,30 @@ exports.addMusiliked = async (req, res) => {
     // Prevent duplicate musiliked for same user/track
     const exists = await Musiliked.findOne({ user: user._id, trackId });
     if (exists) return res.status(409).json({ error: 'Track already Musi-Liked.' });
+    // Try to extract Spotify artist IDs from rawTrack or artists
+    let artistIds = [];
+    if (rawTrack && Array.isArray(rawTrack.artists)) {
+      artistIds = rawTrack.artists.map(a => a.id).filter(Boolean);
+    }
+    // If not found, try to detect IDs in artists field (length 22)
+    if ((!artistIds || artistIds.length === 0) && Array.isArray(artists)) {
+      artistIds = artists.filter(a => typeof a === 'string' && a.length === 22);
+    }
+    // Fetch genres from Spotify
+    let genres = [];
+    const accessToken = req.body.spotifyAccessToken || process.env.SPOTIFY_ACCESS_TOKEN;
+    if (artistIds.length > 0 && accessToken) {
+      genres = await getGenresFromSpotify(artistIds, accessToken);
+    } else {
+      // No valid token: skip genre enrichment, store empty genres
+      genres = [];
+    }
     const musiliked = new Musiliked({
       user: user._id,
       trackId,
       trackName,
       artists,
+      genres, // <-- Save genres here
       albumName,
       albumImage,
       spotifyUrl,
@@ -218,10 +255,18 @@ exports.calculateCompatibilityFlexible = async (userA, userB, weights = COMPATIB
   const profileGenresA = new Set(Array.isArray(userAObj?.musiliked_genres) ? userAObj.musiliked_genres : []);
   const profileGenresB = new Set(Array.isArray(userBObj?.musiliked_genres) ? userBObj.musiliked_genres : []);
   const sharedProfileGenres = [...profileGenresA].filter(g => profileGenresB.has(g));
-  // Normalized scores
-  const trackScore = sharedTrackIds.length / (new Set([...idsA, ...idsB]).size || 1);
-  const trackArtistScore = sharedTrackArtists.length / (new Set([...trackArtistsA, ...trackArtistsB]).size || 1);
-  const trackGenreScore = sharedTrackGenres.length / (new Set([...trackGenresA, ...trackGenresB]).size || 1);
+  // Normalized scores (directional percentage for each user)
+  const percentA = sharedTrackIds.length / (tracksA.length || 1);
+  const percentB = sharedTrackIds.length / (tracksB.length || 1);
+  const trackScore = (percentA + percentB) / 2;
+  // Directional percentages for artists
+  const percentArtistsA = sharedTrackArtists.length / (trackArtistsA.size || 1);
+  const percentArtistsB = sharedTrackArtists.length / (trackArtistsB.size || 1);
+  const trackArtistScore = (percentArtistsA + percentArtistsB) / 2;
+  // Directional percentages for genres
+  const percentGenresA = sharedTrackGenres.length / (trackGenresA.size || 1);
+  const percentGenresB = sharedTrackGenres.length / (trackGenresB.size || 1);
+  const trackGenreScore = (percentGenresA + percentGenresB) / 2;
   const profileArtistScore = sharedProfileArtists.length / (new Set([...profileArtistsA, ...profileArtistsB]).size || 1);
   const profileGenreScore = sharedProfileGenres.length / (new Set([...profileGenresA, ...profileGenresB]).size || 1);
   // Weighted sum
@@ -240,8 +285,14 @@ exports.calculateCompatibilityFlexible = async (userA, userB, weights = COMPATIB
     sharedProfileGenres,
     scores: {
       trackScore,
+      trackScorePercentA: percentA,
+      trackScorePercentB: percentB,
       trackArtistScore,
+      trackArtistScorePercentA: percentArtistsA,
+      trackArtistScorePercentB: percentArtistsB,
       trackGenreScore,
+      trackGenreScorePercentA: percentGenresA,
+      trackGenreScorePercentB: percentGenresB,
       profileArtistScore,
       profileGenreScore,
       weightedScore,

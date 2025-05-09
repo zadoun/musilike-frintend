@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 const axios = require('axios');
 const Musiliked = require('./models/Musiliked');
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/musilike';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/musilike_mpv_V5';
 const SPOTIFY_API_BASE = 'https://api.spotify.com/v1';
 
 if (process.argv.length < 3) {
@@ -33,16 +33,32 @@ async function enrichAllTracks() {
   await mongoose.connect(MONGO_URI);
   console.log('Connected to MongoDB');
   const tracks = await Musiliked.find({});
+  console.log(`Found ${tracks.length} tracks in database.`);
   const artistGenreCache = {};
   let updated = 0;
   for (const track of tracks) {
-    const artistIds = Array.isArray(track.artists) ? track.artists : [];
+    // Prefer artists as Spotify IDs, else extract from rawTrack.artists
+    let artistIds = [];
+    if (Array.isArray(track.artists) && track.artists.length > 0 && track.artists[0].length === 22) {
+      artistIds = track.artists;
+    } else if (track.rawTrack && Array.isArray(track.rawTrack.artists)) {
+      artistIds = track.rawTrack.artists.map(a => a.id).filter(Boolean);
+    }
+    if (!track.trackName) {
+      console.log('Track with no name:', track);
+    }
+    if (!artistIds.length) {
+      console.log(`Track: ${track.trackName} | No artist IDs found. (artists:`, track.artists, ")");
+    } else {
+      console.log(`Track: ${track.trackName} | Extracted artist IDs:`, artistIds);
+    }
     let genresSet = new Set();
     for (const artistId of artistIds) {
       const genres = await getArtistGenres(artistId, artistGenreCache, SPOTIFY_ACCESS_TOKEN);
       genres.forEach(g => genresSet.add(g));
     }
     const genresArr = Array.from(genresSet);
+    console.log(`Genres found for "${track.trackName}":`, genresArr);
     if (genresArr.length > 0 && JSON.stringify(track.genres||[]) !== JSON.stringify(genresArr)) {
       track.genres = genresArr;
       await track.save();
