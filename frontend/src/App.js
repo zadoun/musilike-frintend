@@ -6,6 +6,7 @@ import SpotifySearchBar from './SpotifySearchBar';
 import Inbox from './Inbox';
 import SentRecommendations from './SentRecommendations';
 import MusicProfile from './MusicProfile';
+import MusicPreferences from './MusicPreferences';
 import Compatibility from './Compatibility';
 import { io } from 'socket.io-client';
 import API_URL from './api';
@@ -157,11 +158,13 @@ function App() {
       Sent{sentBadge > 0 && <span className="badge">{sentBadge}</span>}
     </button>
     <button className="topbar-btn topbar-btn-right" onClick={() => setPage('playlist')}>Liked Music</button>
+    <button className="topbar-btn topbar-btn-right" onClick={() => setPage('preferences')}>Music Preferences</button>
     <button className="topbar-btn topbar-btn-right" onClick={() => setPage('compatibility')}>Compatibility</button>
   </div>
 </nav>
           {page === 'search' && <SpotifySearchBar onMusilikedChange={toggleMusilikedRefreshFlag} />}
           {page === 'playlist' && <MusicProfile musilikedRefreshFlag={musilikedRefreshFlag} />}
+          {page === 'preferences' && <MusicPreferences />}
           {page === 'compatibility' && user && user._id && <Compatibility currentUserId={user._id} />}
           {page === 'inbox' && <Inbox userId={user._id} refreshFlag={refreshInboxFlag} />}
           {page === 'sent' && <SentRecommendations userId={user._id} />}

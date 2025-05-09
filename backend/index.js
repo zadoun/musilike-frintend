@@ -176,15 +176,14 @@ app.get('/api/profile', async (req, res) => {
       email: user.email,
       username: user.username,
       _id: user._id,
-      isSinger: user.isSinger,
-      singerLevel: user.singerLevel,
-      isMusician: user.isMusician,
-      instruments: user.instruments,
       musiliked_genres: user.musiliked_genres,
       musiliked_artistes: user.musiliked_artistes,
       profilePicture: user.profilePicture,
       birthday: user.birthday,
-      gender: user.gender
+      gender: user.gender,
+      city: user.city,
+      location: user.location,
+      musicSkills: user.musicSkills
     });
   } catch (err) {
     res.status(401).json({ error: 'Invalid token.' });
@@ -200,25 +199,18 @@ app.put('/api/profile', async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev_secret');
     const user = await User.findOne({ email: decoded.email });
     if (!user) return res.status(404).json({ error: 'User not found.' });
-    const { profilePicture, birthday, gender, isSinger, singerLevel, isMusician, instruments } = req.body;
+    const { profilePicture, birthday, gender, city, location, musicSkills } = req.body;
     if (profilePicture !== undefined) user.profilePicture = profilePicture;
     if (birthday !== undefined) user.birthday = birthday;
     if (gender !== undefined) user.gender = gender;
-    if (isSinger !== undefined) user.isSinger = isSinger;
-    if (singerLevel !== undefined) user.singerLevel = singerLevel;
-    if (isMusician !== undefined) user.isMusician = isMusician;
-    if (instruments !== undefined) {
-      // Merge instruments by name: update existing, add new, keep others
-      const existing = Array.isArray(user.instruments) ? [...user.instruments] : [];
-      const incoming = Array.isArray(instruments) ? instruments.map(({ _id, ...rest }) => rest) : [];
-      // Create a map for quick lookup
-      const existingMap = new Map(existing.map(inst => [inst.name, inst]));
-      // Update or add
-      incoming.forEach(inst => {
-        existingMap.set(inst.name, { ...existingMap.get(inst.name), ...inst });
-      });
-      // Keep all instruments: updated, added, and untouched
-      user.instruments = Array.from(existingMap.values());
+    if (city !== undefined) user.city = city;
+    if (location !== undefined) user.location = location;
+    if (musicSkills !== undefined) {
+      // Update the musicSkills object as a whole or merge fields
+      user.musicSkills = {
+        ...user.musicSkills,
+        ...musicSkills
+      };
     }
 
     await user.save();
@@ -227,10 +219,9 @@ app.put('/api/profile', async (req, res) => {
       profilePicture: user.profilePicture,
       birthday: user.birthday,
       gender: user.gender,
-      isSinger: user.isSinger,
-      singerLevel: user.singerLevel,
-      isMusician: user.isMusician,
-      instruments: user.instruments
+      city: user.city,
+      location: user.location,
+      musicSkills: user.musicSkills
     });
   } catch (err) {
     res.status(500).json({ error: 'Could not update profile.' });
