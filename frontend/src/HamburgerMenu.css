@@ -30,6 +30,21 @@
   padding: 0.5rem 1rem;
   min-width: 120px;
 }
+.menu-item {
+  background: none;
+  border: none;
+  color: #1db954;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.5rem 0;
+  width: 100%;
+  text-align: left;
+}
+.menu-item:hover {
+  text-decoration: underline;
+  background: #e6f9f0;
+}
 .menu-logout {
   background: none;
   border: none;

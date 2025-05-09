@@ -440,7 +440,7 @@ function MusicSkillsSection() {
       .then(res => res.ok ? res.json() : Promise.reject())
       .then(() => {
         setSaveStatus('Saved');
-        setEditMode(false);
+        // Remain in edit mode after saving, so user can continue editing
       })
       .catch(() => setSaveStatus('Error'));
   };
@@ -519,9 +519,26 @@ function MusicSkillsSection() {
           </div>
         )}
         {editMode ? (
-          <button type="submit" style={{marginTop: 18, padding: '8px 32px', background: '#319795', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 16, cursor: 'pointer'}}>Save</button>
+          <>
+            <button type="submit" style={{marginTop: 18, padding: '8px 32px', background: '#319795', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 16, cursor: 'pointer'}}>Save</button>
+            <button
+              type="button"
+              style={{marginTop: 18, marginLeft: 12, padding: '8px 32px', background: '#e53e3e', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 16, cursor: 'pointer'}}
+              onClick={() => setEditMode(false)}
+              aria-label="Cancel editing music skills"
+            >
+              Cancel
+            </button>
+          </>
         ) : (
-          <button type="button" style={{marginTop: 18, padding: '8px 32px', background: '#319795', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 16, cursor: 'pointer'}} onClick={() => setEditMode(true)}>Edit</button>
+          <button
+            type="button"
+            style={{marginTop: 18, padding: '8px 32px', background: '#319795', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 16, cursor: 'pointer'}}
+            onClick={() => setEditMode(true)}
+            aria-label="Edit music skills"
+          >
+            Edit
+          </button>
         )}
         {saveStatus && <span style={{marginLeft: 18, color: saveStatus==='Saved'?'green':'red', fontWeight: 600}}>{saveStatus==='Saved' ? 'Saved!' : 'Error saving'}</span>}
       </form>

@@ -135,7 +135,7 @@ function App() {
         <Auth onAuth={setUser} />
       ) : (
         <div style={{ position: 'relative', minHeight: '100vh' }}>
-          <HamburgerMenu onLogout={handleLogout} />
+          <HamburgerMenu onLogout={handleLogout} onPreferences={() => setPage('preferences')} />
           <h2>Hi {user.username}!</h2>
           <nav style={{marginBottom: 24}}>
   <div className="top-menu">
@@ -158,7 +158,6 @@ function App() {
       Sent{sentBadge > 0 && <span className="badge">{sentBadge}</span>}
     </button>
     <button className="topbar-btn topbar-btn-right" onClick={() => setPage('playlist')}>Liked Music</button>
-    <button className="topbar-btn topbar-btn-right" onClick={() => setPage('preferences')}>Music Preferences</button>
     <button className="topbar-btn topbar-btn-right" onClick={() => setPage('compatibility')}>Compatibility</button>
   </div>
 </nav>
