@@ -5,6 +5,8 @@ const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret';
 
 // GET /api/users - List users (for recommendation selection)
+const MusilikedController = require('./MusilikedController');
+
 const listUsers = async (req, res) => {
   const auth = req.headers.authorization;
   if (!auth) return res.status(401).json({ error: 'No token provided.' });
@@ -20,10 +22,66 @@ const listUsers = async (req, res) => {
   try {
     // Exclude the current user from the list
     const users = await User.find({ _id: { $ne: user._id } }, { password: 0 });
-    res.json({ users });
+    // For each user, compute compatibility score with the current user
+    const usersWithCompatibility = await Promise.all(users.map(async (otherUser) => {
+      // Use the same logic as MusilikedController.getCompatibility
+      try {
+        // Directly call the compatibility logic
+        const { weightedScore } = await MusilikedController.calculateCompatibility(user._id, otherUser._id);
+        return { ...otherUser.toObject(), compatibilityScore: Math.round(weightedScore * 100) };
+      } catch (e) {
+        return { ...otherUser.toObject(), compatibilityScore: null };
+      }
+    }));
+    res.json({ users: usersWithCompatibility });
   } catch (err) {
     res.status(500).json({ error: 'Could not fetch users.' });
   }
+};
+
+// --- Internal helper to keep compatibility logic DRY ---
+const Musiliked = require('./models/Musiliked');
+const COMPATIBILITY_WEIGHTS = {
+  track: 0.4,
+  artist: 0.3,
+  genre: 0.3
+};
+MusilikedController.calculateCompatibility = async (userA, userB) => {
+  // This mirrors the logic in getCompatibility
+  const trackWeight = COMPATIBILITY_WEIGHTS.track;
+  const artistWeight = COMPATIBILITY_WEIGHTS.artist;
+  const genreWeight = COMPATIBILITY_WEIGHTS.genre;
+  const totalWeight = trackWeight + artistWeight + genreWeight;
+  const normTrackWeight = trackWeight / totalWeight;
+  const normArtistWeight = artistWeight / totalWeight;
+  const normGenreWeight = genreWeight / totalWeight;
+
+  // Get all musiliked tracks for both users
+  const [tracksA, tracksB] = await Promise.all([
+    Musiliked.find({ user: userA }),
+    Musiliked.find({ user: userB })
+  ]);
+  // Track ID overlap
+  const idsA = new Set(tracksA.map(t => t.trackId));
+  const idsB = new Set(tracksB.map(t => t.trackId));
+  const sharedTrackIds = [...idsA].filter(id => idsB.has(id));
+  // Artist overlap
+  const artistsA = new Set(tracksA.flatMap(t => t.artists || []));
+  const artistsB = new Set(tracksB.flatMap(t => t.artists || []));
+  const sharedArtists = [...artistsA].filter(artist => artistsB.has(artist));
+  // Genre overlap (from user.musiliked_genres)
+  const User = require('./models/User');
+  const userAObj = await User.findById(userA);
+  const userBObj = await User.findById(userB);
+  const genresA = new Set(Array.isArray(userAObj?.musiliked_genres) ? userAObj.musiliked_genres : []);
+  const genresB = new Set(Array.isArray(userBObj?.musiliked_genres) ? userBObj.musiliked_genres : []);
+  const sharedGenres = [...genresA].filter(genre => genresB.has(genre));
+  // Compatibility scores
+  const trackScore = sharedTrackIds.length / (new Set([...idsA, ...idsB]).size || 1);
+  const artistScore = sharedArtists.length / (new Set([...artistsA, ...artistsB]).size || 1);
+  const genreScore = sharedGenres.length / (new Set([...genresA, ...genresB]).size || 1);
+  const weightedScore = (trackScore * normTrackWeight) + (artistScore * normArtistWeight) + (genreScore * normGenreWeight);
+  return { weightedScore };
 };
 
 // POST /api/recommend - Send a recommendation
