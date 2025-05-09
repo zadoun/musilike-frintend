@@ -3,6 +3,9 @@ import API_URL from './api';
 import SPOTIFY_GENRES from './spotifyGenres';
 import MusilikeButton from './MusilikeButton';
 
+// --- Music Skills Section ---
+// (already defined below)
+
 export default function MusicPreferences() {
   // State for Musi-Liked track IDs
   const [musilikedIds, setMusilikedIds] = useState([]);
@@ -177,12 +180,13 @@ export default function MusicPreferences() {
   };
 
   return (
-    <div className="music-preferences-container" style={{maxWidth: 700, margin: '2rem auto', background: '#fff', borderRadius: 16, boxShadow: '0 4px 24px rgba(30,185,84,0.10)', padding: '2.5rem 2.5rem 1.5rem 2.5rem', color: '#111'}}>
-      <h2 style={{color: '#1db954', marginBottom: 28}}>Music Preferences</h2>
-      {/* Genres Section */}
-      <div className="genre-selection" style={{marginBottom: 24}}>
-        <h3>Select your favorite genres</h3>
-        <div style={{display: 'flex', flexWrap: 'wrap', gap: '12px'}}>
+    <>
+      <MusicSkillsSection />
+      <div className="music-preferences-container" style={{maxWidth: 700, margin: '2rem auto', background: '#fff', borderRadius: 16, boxShadow: '0 4px 24px rgba(30,185,84,0.10)', padding: '2.5rem 2.5rem 1.5rem 2.5rem', color: '#111'}}>
+        {/* Genres Section */}
+        <div className="genre-selection" style={{marginBottom: 24}}>
+          <h3>Select your favorite genres</h3>
+          <div style={{display: 'flex', flexWrap: 'wrap', gap: '12px'}}>
           {(() => {
             const genreIcons = {
               "pop": "🎤",
@@ -236,11 +240,6 @@ export default function MusicPreferences() {
             ));
           })()}
         </div>
-        {hasChangedRef.current && saveStatus && (
-          <div style={{marginTop: 8, fontSize: 13, color: saveStatus === 'Saved' ? 'green' : 'red'}}>
-            {saveStatus === 'Saved' ? 'Genres saved!' : 'Error saving genres'}
-          </div>
-        )}
       </div>
 
       {/* Artists Section */}
@@ -284,49 +283,248 @@ export default function MusicPreferences() {
         ) : (
           <div style={{display: 'flex', flexWrap: 'wrap', gap: '14px'}}>
             {favouriteTracks.map(track => (
-  <div
-    key={track.id}
-    style={{
-      display: 'flex',
-      alignItems: 'flex-start',
-      background: '#f6f6f6',
-      borderRadius: 8,
-      padding: '10px 14px',
-      minWidth: 0,
-      marginBottom: 4,
-      gap: 12,
-      fontWeight: 600,
-      maxWidth: 340,
-      minHeight: 54,
-      border: '2px solid transparent',
-      transition: 'all 0.15s',
-      boxSizing: 'border-box'
-    }}
-    title={track.name}
-  >
-    <img
-      src={track.albumImage || 'https://via.placeholder.com/36?text=%20'}
-      alt={track.albumName || 'No album'}
-      style={{width: 36, height: 36, objectFit: 'cover', borderRadius: '50%', marginRight: 8, background: '#eee'}}
-    />
-    <span style={{
-      whiteSpace: 'normal',
-      overflow: 'hidden',
-      textOverflow: 'ellipsis',
-      maxWidth: 140,
-      color: '#111',
-      display: 'inline-block',
-      wordBreak: 'break-word',
-      fontSize: 15,
-      lineHeight: 1.3,
-      marginLeft: 10
-    }}>{track.trackName || track.name}</span>
-    <MusilikeButton track={track} musilikedIds={musilikedIds} refreshMusilikedIds={refreshMusilikedIds} />
-  </div>
-))}
+              <div
+                key={track.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  background: '#f6f6f6',
+                  borderRadius: 8,
+                  padding: '10px 14px',
+                  minWidth: 0,
+                  marginBottom: 4,
+                  gap: 12,
+                  fontWeight: 600,
+                  maxWidth: 340,
+                  minHeight: 54,
+                  border: '2px solid transparent',
+                  transition: 'all 0.15s',
+                  boxSizing: 'border-box'
+                }}
+                title={track.name}
+              >
+                <img
+                  src={track.albumImage || 'https://via.placeholder.com/36?text=%20'}
+                  alt={track.albumName || 'No album'}
+                  style={{width: 36, height: 36, objectFit: 'cover', borderRadius: '50%', marginRight: 8, background: '#eee'}} 
+                />
+                <span style={{
+                  whiteSpace: 'normal',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  maxWidth: 140,
+                  color: '#111',
+                  display: 'inline-block',
+                  wordBreak: 'break-word',
+                  fontSize: 15,
+                  lineHeight: 1.3,
+                  marginLeft: 10
+                }}>{track.trackName || track.name}</span>
+                <MusilikeButton track={track} musilikedIds={musilikedIds} refreshMusilikedIds={refreshMusilikedIds} />
+              </div>
+            ))}
           </div>
         )}
       </div>
+    </div>
+    </>
+  );
+}
+
+const INSTRUMENT_CATEGORIES = [
+  { category: 'Cordes-Cordes frottées', instruments: ['Violon', 'Alto', 'Violoncelle', 'Contrebasse'] },
+  { category: 'Cordes-Cordes pincées', instruments: ['Guitare acoustique', 'Guitare électrique', 'Basse', 'Harpe', 'Ukulélé', 'Banjo', 'Mandoline', 'Lyre'] },
+  { category: 'Claviers-Classiques', instruments: ['Piano', 'Clavecin', 'Orgue'] },
+  { category: 'Claviers-Électroniques', instruments: ['Synthétiseur', 'Clavier MIDI', 'Piano numérique'] },
+  { category: 'Claviers-Traditionnels', instruments: ['Accordéon', 'Harmonium'] },
+  { category: 'Vent - Cuivres--', instruments: ['Trompette', 'Cornet à pistons', 'Trombone', 'Cor d’harmonie', 'Tuba', 'Euphonium', 'Bugle', 'Sousaphone'] },
+  { category: 'Vent - Bois-Avec anche simple', instruments: ['Clarinette', 'Saxophone'] },
+  { category: 'Vent - Bois-Avec anche double', instruments: ['Hautbois', 'Basson'] },
+  { category: 'Vent - Bois-Sans anche', instruments: ['Flûte traversière', 'Flûte à bec', 'Piccolo', 'Ocarina', 'Didgeridoo'] },
+  { category: 'Percussions-Membranophones', instruments: ['Tambour', 'Congas', 'Djembé', 'Timbales', 'Bongos', 'Batterie'] },
+  { category: 'Percussions-Idiophones', instruments: ['Xylophone', 'Marimba', 'Glockenspiel', 'Triangle', 'Castagnettes', 'Cloche', 'Tambourin'] },
+  { category: 'Percussions-Électroniques', instruments: ['Pad de batterie électronique', 'Boîte à rythmes'] },
+  { category: 'Électroniques--', instruments: ['Synthétiseur', 'Sampler', 'Séquenceur', 'Theremin', 'Ondes Martenot', 'Contrôleur MIDI'] }
+];
+
+// Build instrument-to-category lookup
+const INSTRUMENT_TO_CATEGORY = {};
+INSTRUMENT_CATEGORIES.forEach(cat => {
+  cat.instruments.forEach(inst => {
+    INSTRUMENT_TO_CATEGORY[inst] = cat.category;
+  });
+});
+
+// Most popular instruments first
+const POPULAR_INSTRUMENTS_ORDER = [
+  'Piano', 'Guitare acoustique', 'Guitare électrique', 'Batterie', 'Violon', 'Basse', 'Synthétiseur', 'Saxophone', 'Clarinette', 'Flûte traversière', 'Trompette', 'Ukulélé', 'Accordéon', 'Harmonium', 'Violoncelle', 'Hautbois', 'Tambour', 'Congas', 'Djembé', 'Timbales', 'Bongos', 'Marimba', 'Xylophone', 'Triangle', 'Castagnettes', 'Cloche', 'Tambourin', 'Banjo', 'Mandoline', 'Lyre', 'Clavecin', 'Orgue', 'Clavier MIDI', 'Piano numérique', 'Harpe', 'Cornet à pistons', 'Trombone', 'Cor d’harmonie', 'Tuba', 'Euphonium', 'Bugle', 'Sousaphone', 'Basson', 'Piccolo', 'Ocarina', 'Didgeridoo', 'Pad de batterie électronique', 'Boîte à rythmes', 'Sampler', 'Séquenceur', 'Theremin', 'Ondes Martenot', 'Contrôleur MIDI', 'Glockenspiel'
+];
+
+const ALL_INSTRUMENTS = Array.from(
+  new Set(INSTRUMENT_CATEGORIES.flatMap(c => c.instruments))
+);
+
+const SORTED_INSTRUMENTS = POPULAR_INSTRUMENTS_ORDER.filter(i => ALL_INSTRUMENTS.includes(i));
+
+const INSTRUMENT_LEVELS = ['beginner', 'intermediate', 'advanced'];
+
+function MusicSkillsSection() {
+  const [musicSkills, setMusicSkills] = React.useState({
+    isSinger: false,
+    singerLevel: 'beginner',
+    isMusician: false,
+    instruments: []
+  });
+  const [saveStatus, setSaveStatus] = React.useState('');
+  const [loading, setLoading] = React.useState(true);
+  const [editMode, setEditMode] = React.useState(false);
+
+  React.useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return setLoading(false);
+    fetch(`${API_URL}/api/profile`, {
+      headers: { 'Authorization': 'Bearer ' + token }
+    })
+      .then(res => res.ok ? res.json() : Promise.reject())
+      .then(data => {
+        if (data.musicSkills) setMusicSkills({
+          isSinger: !!data.musicSkills.isSinger,
+          singerLevel: data.musicSkills.singerLevel || 'beginner',
+          isMusician: !!data.musicSkills.isMusician,
+          instruments: Array.isArray(data.musicSkills.instruments) ? data.musicSkills.instruments : []
+        });
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  // Add instrument from dropdown
+  const handleAddInstrument = (instrument) => {
+    setMusicSkills(ms => {
+      if (ms.instruments.some(i => i.name === instrument)) return ms;
+      const category = INSTRUMENT_TO_CATEGORY[instrument] || '';
+      return { ...ms, instruments: [...ms.instruments, { name: instrument, category, level: 'beginner' }] };
+    });
+  };
+
+
+  // Remove instrument
+  const handleRemoveInstrument = (instrument) => {
+    setMusicSkills(ms => ({
+      ...ms,
+      instruments: ms.instruments.filter(i => i.name !== instrument)
+    }));
+  };
+
+  // Change instrument level
+  const handleInstrumentLevelChange = (instrument, level) => {
+    setMusicSkills(ms => ({
+      ...ms,
+      instruments: ms.instruments.map(i => i.name === instrument ? { ...i, level } : i)
+    }));
+  };
+
+  const handleSave = e => {
+    e.preventDefault();
+    setSaveStatus('');
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    fetch(`${API_URL}/api/profile`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token,
+      },
+      body: JSON.stringify({ musicSkills })
+    })
+      .then(res => res.ok ? res.json() : Promise.reject())
+      .then(() => {
+        setSaveStatus('Saved');
+        setEditMode(false);
+      })
+      .catch(() => setSaveStatus('Error'));
+  };
+
+  if (loading) return <div style={{marginTop: 40}}>Loading music skills…</div>;
+  return (
+    <div style={{marginTop: 48, padding: 24, background: '#fafbfc', borderRadius: 12, boxShadow: '0 1px 6px rgba(0,0,0,0.07)', maxWidth: 700, marginLeft: 'auto', marginRight: 'auto'}}>
+      <h3 style={{marginBottom: 18}}>Music Skills</h3>
+      <form onSubmit={handleSave} style={{ textAlign: 'left' }}>
+        <div style={{marginBottom: 18}}>
+          <label style={{fontWeight: 600, marginRight: 16}}>
+            <input type="checkbox" checked={musicSkills.isSinger} onChange={e => setMusicSkills(ms => ({...ms, isSinger: e.target.checked}))} disabled={!editMode} />
+            &nbsp;I am a singer
+          </label>
+          {musicSkills.isSinger && (
+            <span style={{marginLeft: 18}}>
+              Level:&nbsp;
+              <select value={musicSkills.singerLevel} onChange={e => setMusicSkills(ms => ({...ms, singerLevel: e.target.value}))} disabled={!editMode}>
+                <option value="beginner">Beginner</option>
+                <option value="intermediate">Intermediate</option>
+                <option value="advanced">Advanced</option>
+              </select>
+            </span>
+          )}
+        </div>
+        <div style={{marginBottom: 18}}>
+          <label style={{fontWeight: 600, marginRight: 16}}>
+            <input type="checkbox" checked={musicSkills.isMusician} onChange={e => setMusicSkills(ms => ({...ms, isMusician: e.target.checked}))} disabled={!editMode} />
+            &nbsp;I am a musician
+          </label>
+        </div>
+        {musicSkills.isMusician && (
+          <div style={{marginBottom: 18}}>
+            <label style={{fontWeight: 600, marginRight: 16}}>
+              Instrument:
+              <select
+                style={{marginLeft: 10, minWidth: 200}}
+                onChange={e => handleAddInstrument(e.target.value)}
+                value=""
+                disabled={!editMode}
+              >
+                <option value="" disabled>
+                  Select an instrument
+                </option>
+                {SORTED_INSTRUMENTS.map(inst => (
+                  <option key={inst} value={inst} disabled={musicSkills.instruments.some(i => i.name === inst)}>
+                    {inst}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div style={{marginTop: 12, display: 'flex', flexWrap: 'wrap', gap: '12px'}}>
+              {musicSkills.instruments.map(inst => (
+                <div key={inst.name} style={{display: 'flex', alignItems: 'center', background: '#b2f5ea', borderRadius: 8, padding: '4px 10px', gap: 8}}>
+                  <span>{inst.name}</span>
+                  <select
+                    style={{marginLeft: 6}}
+                    value={inst.level}
+                    onChange={e => handleInstrumentLevelChange(inst.name, e.target.value)}
+                    disabled={!editMode}
+                  >
+                    {INSTRUMENT_LEVELS.map(lvl => (
+                      <option key={lvl} value={lvl}>
+                        {lvl.charAt(0).toUpperCase() + lvl.slice(1)}
+                      </option>
+                    ))}
+                  </select>
+                  {editMode && (
+                    <button type="button" style={{marginLeft: 6, background: 'transparent', border: 'none', color: '#e53e3e', cursor: 'pointer', fontWeight: 700}} onClick={() => handleRemoveInstrument(inst.name)}>
+                      ×
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {editMode ? (
+          <button type="submit" style={{marginTop: 18, padding: '8px 32px', background: '#319795', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 16, cursor: 'pointer'}}>Save</button>
+        ) : (
+          <button type="button" style={{marginTop: 18, padding: '8px 32px', background: '#319795', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 16, cursor: 'pointer'}} onClick={() => setEditMode(true)}>Edit</button>
+        )}
+        {saveStatus && <span style={{marginLeft: 18, color: saveStatus==='Saved'?'green':'red', fontWeight: 600}}>{saveStatus==='Saved' ? 'Saved!' : 'Error saving'}</span>}
+      </form>
     </div>
   );
 }
