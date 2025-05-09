@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import API_URL from './api';
 
-export default function MusilikeButton({ track, musilikedIds = [], refreshMusilikedIds, fromUserId }) {
+export default function MusilikeButton({ track, musilikedIds = [], refreshMusilikedIds, fromUserId, recommendationId }) {
   const [loading, setLoading] = useState(false);
   const isMusiliked = musilikedIds.includes(track.id);
 
@@ -16,6 +16,7 @@ export default function MusilikeButton({ track, musilikedIds = [], refreshMusili
     }
     const method = isMusiliked ? 'DELETE' : 'POST';
     const url = `${API_URL}/api/musiliked${isMusiliked ? `/${track.id}` : ''}`;
+    const spotifyAccessToken = localStorage.getItem('spotify_access_token');
     const body = isMusiliked ? undefined : JSON.stringify({
       trackId: track.id,
       trackName: track.name,
@@ -23,7 +24,10 @@ export default function MusilikeButton({ track, musilikedIds = [], refreshMusili
       albumName: track.album?.name,
       albumImage: track.album?.images?.[0]?.url,
       spotifyUrl: track.external_urls?.spotify,
-      ...(fromUserId ? { fromUserId } : {})
+      rawTrack: track,
+      spotifyAccessToken,
+      ...(fromUserId ? { fromUserId } : {}),
+      ...(recommendationId ? { recommendationId } : {})
     });
     try {
       const response = await fetch(url, {

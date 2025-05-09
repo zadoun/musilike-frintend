@@ -75,6 +75,7 @@ export default function RecommendationCard({ rec, musilikedIds, refreshMusiliked
             musilikedIds={musilikedIds}
             refreshMusilikedIds={refreshMusilikedIds}
             fromUserId={rec.fromUser?._id}
+            recommendationId={rec._id}
           />
           {/* Trash button below Musi-Like */}
           <button
