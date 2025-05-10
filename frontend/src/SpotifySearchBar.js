@@ -130,7 +130,10 @@ function SpotifySearchBar({ onResults, onMusilikedChange }) {
                   <MusilikeButton
   track={track}
   musilikedIds={musilikedIds}
-  refreshMusilikedIds={onMusilikedChange}
+  refreshMusilikedIds={async () => {
+    await refreshMusiliked();
+    onMusilikedChange && onMusilikedChange();
+  }}
 />
                 </div>
               </li>

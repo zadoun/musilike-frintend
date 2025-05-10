@@ -6,11 +6,12 @@ const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret';
 
 // Flexible weight configuration for compatibility scoring
 const COMPATIBILITY_WEIGHTS = {
-  track: 0.3,                // Shared track overlap
-  trackArtist: 0.2,          // Shared artist in Musi-Liked tracks
-  trackGenre: 0.2,           // Shared genre in Musi-Liked tracks
-  profileArtist: 0.1,        // Shared artist at profile level
-  profileGenre: 0.2          // Shared genre at profile level
+  track: 0.27,                // Shared track overlap
+  trackArtist: 0.18,          // Shared artist in Musi-Liked tracks
+  trackGenre: 0.18,           // Shared genre in Musi-Liked tracks
+  profileArtist: 0.09,        // Shared artist at profile level
+  profileGenre: 0.18,         // Shared genre at profile level
+  sharedRecommendationLiked: 0.1 // Shared recommendations liked
 };
 
 // GET /api/musiliked - Get all Musi-Liked tracks for the logged-in user
@@ -269,13 +270,32 @@ exports.calculateCompatibilityFlexible = async (userA, userB, weights = COMPATIB
   const trackGenreScore = (percentGenresA + percentGenresB) / 2;
   const profileArtistScore = sharedProfileArtists.length / (new Set([...profileArtistsA, ...profileArtistsB]).size || 1);
   const profileGenreScore = sharedProfileGenres.length / (new Set([...profileGenresA, ...profileGenresB]).size || 1);
+    // Shared recommendations liked logic
+  // Tracks recommended from userA to userB and liked by B
+  const sharedRecommendedLikedAtoB = tracksB.filter(t => t.fromUser && t.fromUser.toString() === userA.toString() && t.recommendation);
+  // Tracks recommended from userB to userA and liked by A
+  const sharedRecommendedLikedBtoA = tracksA.filter(t => t.fromUser && t.fromUser.toString() === userB.toString() && t.recommendation);
+  const totalSharedRecommendedLiked = sharedRecommendedLikedAtoB.length + sharedRecommendedLikedBtoA.length;
+
+  // Total recommendations exchanged (for normalization)
+  const Recommendation = require('./models/Recommendation');
+  // Only count recommendations between the two users
+  const totalRecommendations = await Recommendation.countDocuments({
+    $or: [
+      { fromUser: userA, toUser: userB },
+      { fromUser: userB, toUser: userA }
+    ]
+  });
+  const sharedRecommendationLikedScore = totalRecommendations > 0 ? totalSharedRecommendedLiked / totalRecommendations : 0;
+
   // Weighted sum
   const weightedScore =
     (trackScore * weights.track) +
     (trackArtistScore * weights.trackArtist) +
     (trackGenreScore * weights.trackGenre) +
     (profileArtistScore * weights.profileArtist) +
-    (profileGenreScore * weights.profileGenre);
+    (profileGenreScore * weights.profileGenre) +
+    (sharedRecommendationLikedScore * (weights.sharedRecommendationLiked || 0));
   return {
     sharedTrackIds,
     sharedTracks, // <-- full track objects
@@ -283,6 +303,8 @@ exports.calculateCompatibilityFlexible = async (userA, userB, weights = COMPATIB
     sharedTrackGenres,
     sharedProfileArtists,
     sharedProfileGenres,
+    sharedRecommendedLikedAtoB,
+    sharedRecommendedLikedBtoA,
     scores: {
       trackScore,
       trackScorePercentA: percentA,
@@ -296,6 +318,7 @@ exports.calculateCompatibilityFlexible = async (userA, userB, weights = COMPATIB
       profileArtistScore,
       profileGenreScore,
       weightedScore,
+      sharedRecommendationLikedScore,
       weights
     },
     count: {
@@ -303,7 +326,9 @@ exports.calculateCompatibilityFlexible = async (userA, userB, weights = COMPATIB
       sharedTrackArtists: sharedTrackArtists.length,
       sharedTrackGenres: sharedTrackGenres.length,
       sharedProfileArtists: sharedProfileArtists.length,
-      sharedProfileGenres: sharedProfileGenres.length
+      sharedProfileGenres: sharedProfileGenres.length,
+      sharedRecommendationsLiked: totalSharedRecommendedLiked,
+      totalRecommendationsExchanged: totalRecommendations
     }
   };
 };

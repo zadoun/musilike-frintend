@@ -48,11 +48,34 @@ export default function PersonalProfile() {
     );
   };
 
-  const handleSave = e => {
+  const handleSave = async e => {
     e.preventDefault();
     setSaveStatus('');
+    setLoading(true);
     const token = localStorage.getItem('token');
-    if (!token) return;
+    if (!token) return setLoading(false);
+    let coords = location;
+    if (!useGPS && city) {
+      // Geocode city using OpenStreetMap Nominatim
+      try {
+        const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}`);
+        const data = await resp.json();
+        if (data && data.length > 0) {
+          coords = {
+            latitude: parseFloat(data[0].lat),
+            longitude: parseFloat(data[0].lon)
+          };
+        } else {
+          setSaveStatus('Could not geocode city');
+          setLoading(false);
+          return;
+        }
+      } catch (err) {
+        setSaveStatus('Could not geocode city');
+        setLoading(false);
+        return;
+      }
+    }
     fetch(`${API_URL}/api/profile`, {
       method: 'PUT',
       headers: {
@@ -63,7 +86,7 @@ export default function PersonalProfile() {
         birthday: birthday ? new Date(birthday) : null,
         gender,
         city: useGPS ? '' : city,
-        location: useGPS ? location : { latitude: '', longitude: '' }
+        location: useGPS ? location : coords
       })
     })
       .then(res => res.ok ? res.json() : Promise.reject())
@@ -71,10 +94,12 @@ export default function PersonalProfile() {
         setSaveStatus('Saved');
         setEditMode(false);
       })
-      .catch(() => setSaveStatus('Error'));
+      .catch(() => setSaveStatus('Error'))
+      .finally(() => setLoading(false));
   };
 
-  if (loading) return <div style={{marginTop: 40}}>Loading profile…</div>;
+
+  if (loading) return <div style={{marginTop: 40}}>Loading profile or saving…</div>;
 
   return (
     <div style={{marginTop: 48, padding: 24, background: '#fafbfc', borderRadius: 12, boxShadow: '0 1px 6px rgba(0,0,0,0.07)', maxWidth: 700, marginLeft: 'auto', marginRight: 'auto'}}>
