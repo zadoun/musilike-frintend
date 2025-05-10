@@ -1,20 +1,95 @@
-.compat-avatar-wrapper {
+.compat-avatar-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px auto;
+  width: 100%;
+}
+
+.compat-username {
+  font-weight: 700;
+  color: #DBB77B;
+  font-size: 21px;
+  margin: 0 0 14px 0;
+  letter-spacing: 1px;
+  text-align: center;
+}
+
+
+.compat-avatar-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  gap: 0;
   position: relative;
-  width: 320px;
-  height: 320px;
-  margin: 0 auto 18px auto;
+  overflow: visible;
+}
+
+.compat-avatar-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  width: auto;
+  height: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+  transition: transform 0.15s;
+  overflow: visible;
+}
+
+.compat-avatar-btn svg {
+  color: #FFF2CC !important;
+  fill: #FFF2CC !important;
+  vertical-align: middle;
+  overflow: visible;
+}
+
+.compat-avatar-btn:active {
+  transform: scale(0.93);
+}
+.compat-avatar-btn.left {
+  margin-right: 12px;
+}
+.compat-avatar-btn.right {
+  margin-left: 12px;
+}
+.compat-avatar-btn[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .compat-avatar {
-  width: 320px;
-  height: 320px;
-  border-radius: 20px;
+  width: 120px;
+  height: 120px;
   object-fit: cover;
-  background: #222;
-  box-shadow: 0 0 2px 2px rgba(255,215,0,0.3), 0 4px 4px 0 #ffd70055;
-  transition: transform 0.18s;
+  border-radius: 50%;
+  border: 2x solid #fff;
+  box-shadow: 0 2px 12px #0004;
 }
 
+.compat-score-zone {
+  margin-top: 10px;
+  margin-bottom: 18px; /* More space below score */
+  background: #181818;
+  border-radius: 12px;
+  padding: 10px 32px 8px 32px;
+  box-shadow: 0 1px 8px #0002;
+  display: flex; /* Was inline-flex, now flex */
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  min-width: 120px;
+  transition: box-shadow 0.15s;
+  position: static; /* Prevent overlap */
+  z-index: auto;
+}
 .compat-avatar.bounce {
   animation: compat-bounce 0.5s cubic-bezier(.25,.46,.45,.94);
 }
@@ -47,19 +122,20 @@
 }
 
 .compat-score-zone {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 320px;
-  margin: 0 auto;
+  margin-top: 10px;
+  margin-bottom: 18px;
+  background: #181818;
+  border-radius: 12px;
+  padding: 10px 32px 8px 32px;
+  box-shadow: 0 1px 8px #0002;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   cursor: pointer;
-  border-bottom-left-radius: 20px;
-  border-bottom-right-radius: 20px;
-  background: rgba(20, 20, 20, 0.82);
-  border-top: 3px solid #ffd700;
-  box-shadow: 0 2px 8px #0002;
-  padding: 14px 0 10px 0;
+  min-width: 120px;
+  transition: box-shadow 0.15s;
+  position: static;
+  z-index: auto;
   text-align: center;
 }
 
@@ -78,15 +154,58 @@
 }
 
 .compat-action-btn {
-  width: 260px;
+  /*width: 260px;
+  min-width: 140px;*/
+  min-height: 56px;
   font-size: 18px;
   font-weight: 700;
-  border-radius: 12px;
+  /*border-radius: 12px;*/
   padding: 15px 0;
   margin-bottom: 0;
   outline: none;
   letter-spacing: 0.5px;
   transition: background 0.18s, box-shadow 0.18s, opacity 0.18s;
+  color: #FFF2CC; /* Default SVG color */
+  overflow: visible;
+}
+
+.compat-action-btn svg {
+  display: inline-block;
+  vertical-align: middle;
+  color: #FFF2CC !important; /* Force SVG color */
+  fill: currentColor;
+  min-width: 32px;
+  min-height: 38px;
+}
+
+.compat-action-btn.recommend {
+  background: linear-gradient(90deg, #ffd700 60%, #ffb700 100%);
+  color: #FFF2CC;
+  border: none;
+  box-shadow: 0 2px 16px #ffd70033, 0 0 0 2px #FFF2CC;
+  overflow: visible;
+}
+
+.compat-action-btn.get {
+  /*background: #fff;*/
+  color: #FFF2CC;
+  /*border: 2.5px solid #ffd700;
+  box-shadow: 0 2px 12px #ffd70022;*/
+  overflow: visible;
+}
+
+.compat-action-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.compat-btn-group {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  overflow: visible;
 }
 .compat-action-btn.recommend {
   background: linear-gradient(90deg, #ffd700 60%, #ffb700 100%);

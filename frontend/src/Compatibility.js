@@ -4,6 +4,9 @@ import './MusicProfile.css';
 import './Compatibility.css';
 import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
+import { ReactComponent as SuggestRecommendationButton } from './SuggestRecommendationButton.svg';
+import { ReactComponent as GetRecommendationButton } from './GetRecommendationButton.svg';
+import { ReactComponent as CompatibilityBadge } from './CompatibilityBadge.svg';
 
 import CompatibilityModal from './CompatibilityModal';
 import RecommendationsModal from './RecommendationsModal';
@@ -95,26 +98,54 @@ export default function Compatibility({ currentUserId, users, selectedUser, setS
         {loading && <div>Loading...</div>}
         {result && (
           <React.Fragment>
-            <div className="compat-avatar-wrapper" style={{position: 'relative', width: 320, height: 320, margin: '0 auto 18px auto'}}>
-              <img
-                className="compat-avatar"
-                src={users.find(u => u._id === selectedUser)?.profilePicture || 'https://i.imgur.com/1Q9Z1Zm.png'}
-                alt={users.find(u => u._id === selectedUser)?.username + "'s profile"}
-              />
-              <div
-                className="compat-score-zone"
-                onClick={() => setShowModal(true)}
-                title="Click for compatibility details"
-                style={{position: 'absolute', left: 0, right: 0, bottom: 0, width: 320, margin: '0 auto'}}>
-                <div className="compat-score-value">
-                  {(result.scores.weightedScore * 100).toFixed(0)}%
+            {/* Avatar block */}
+            <div className="compat-avatar-block" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px auto', width: '100%' }}>
+              <div style={{ fontWeight: 700, color: '#DBB77B', fontSize: 21, margin: '0 0 14px 0', letterSpacing: 1, textAlign: 'center' }}>{users.find(u => u._id === selectedUser)?.username || ''}</div>
+              <div className="compat-avatar-row" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 0, position: 'relative' }}>
+                <button
+                  className="compat-avatar-btn left"
+                  title={`music recommendations for ${users.find(u => u._id === selectedUser)?.username || ''}`}
+                  style={{ background: 'none', border: 'none', padding: 0, marginRight: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 2, width: 'auto', height: 'auto' }}
+                  onClick={() => recommendations.length > 0 && setShowRecModal(true)}
+                  disabled={recommendations.length === 0}
+                >
+                  <SuggestRecommendationButton width={32} height={32} />
+                </button>
+                <div style={{ position: 'relative', width: 96, height: 96, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <img
+                    className="compat-avatar"
+                    src={users.find(u => u._id === selectedUser)?.profilePicture || 'https://i.imgur.com/1Q9Z1Zm.png'}
+                    alt={users.find(u => u._id === selectedUser)?.username + "'s profile"}
+                    style={{ width: 96, height: 96, objectFit: 'cover', borderRadius: '50%', border: '4px solid #fff', boxShadow: '0 2px 8px #0004' }}
+                  />
                 </div>
-                <div className="compat-score-label">Compatibility Score</div>
+                <button
+                  className="compat-avatar-btn right"
+                  title={`Get music recommendations from ${users.find(u => u._id === selectedUser)?.username || ''}`}
+                  style={{ background: 'none', border: 'none', padding: 0, marginLeft: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 2, width: 'auto', height: 'auto' }}
+                  onClick={() => reverseRecs.length > 0 && setShowReverseRecModal(true)}
+                  disabled={reverseRecs.length === 0}
+                >
+                  <GetRecommendationButton width={32} height={32} />
+                </button>
               </div>
             </div>
-            {/* Spotify player */}
+            {/* Compatibility score below avatar block */}
+            <div
+              className="compat-score-zone"
+              onClick={() => setShowModal(true)}
+              title="Click for compatibility details"
+              style={{ marginTop: 10, marginBottom: 6, background: '#181818', borderRadius: 12, padding: '10px 32px 8px 32px', boxShadow: '0 1px 8px #0002', display: 'inline-flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', minWidth: 120 }}>
+              <span style={{ fontSize: 30, color: '#FFF2CC', marginBottom: 2, display: 'block', textAlign: 'center' }}>🎵</span>
+              <span className="compat-score-value" style={{ fontSize: 30, fontWeight: 700, color: '#1db954', textAlign: 'center', margin: 0 }}>
+                {(result.scores.weightedScore * 100).toFixed(0)}%
+              </span>
+              <span className="compat-score-label" style={{ fontSize: 15, color: '#fff', fontWeight: 500, textAlign: 'center', marginTop: 2 }}>Compatibility</span>
+            </div>
+            {/* Last liked music below score */}
             {selectedUserLastTrack && selectedUserLastTrack.spotifyUrl && selectedUserLastTrack.spotifyUrl.includes('spotify.com/track/') && (
-              <div style={{ margin: '12px 0 20px 0', width: '100%', textAlign: 'center' }}>
+              <div style={{ margin: '12px 0 18px 0', width: '100%', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <div style={{ color: '#fff', fontWeight: 600, fontSize: 18, marginBottom: 8 }}>Last liked music</div>
                 <iframe
                   title="Spotify Player"
                   src={`https://open.spotify.com/embed/track/${selectedUserLastTrack.spotifyUrl.split('/track/')[1]?.split('?')[0]}`}
@@ -123,27 +154,15 @@ export default function Compatibility({ currentUserId, users, selectedUser, setS
                   frameBorder="0"
                   allowtransparency="true"
                   allow="encrypted-media"
-                  style={{ borderRadius: 8, margin: '0 auto', display: 'block', boxShadow: '0 2px 8px #0002' }}
+                  style={{ borderRadius: 10, margin: '0 auto', display: 'block', boxShadow: '0 2px 8px #0002', background: '#222' }}
                 />
               </div>
             )}
+
+
+            {/* Spotify player */}
+
             {/* Action Buttons */}
-            <div className="compat-btn-group">
-              <button
-                className="compat-action-btn recommend"
-                disabled={recommendations.length === 0}
-                onClick={() => recommendations.length > 0 && setShowRecModal(true)}
-              >
-                Recommend Music to {users.find(u => u._id === selectedUser)?.username || ''}
-              </button>
-              <button
-                className="compat-action-btn get"
-                disabled={reverseRecs.length === 0}
-                onClick={() => reverseRecs.length > 0 && setShowReverseRecModal(true)}
-              >
-                Get Music from {users.find(u => u._id === selectedUser)?.username || ''}
-              </button>
-            </div>
             <CompatibilityModal
               open={showModal}
               onClose={() => setShowModal(false)}
@@ -171,4 +190,3 @@ export default function Compatibility({ currentUserId, users, selectedUser, setS
     </div>
   );
 }
-
