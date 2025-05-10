@@ -2,14 +2,15 @@ import React, { useEffect, useState } from 'react';
 import API_URL from './api';
 import './MusicProfile.css';
 import './Compatibility.css';
+import Autocomplete from '@mui/material/Autocomplete';
+import TextField from '@mui/material/TextField';
 
 import CompatibilityModal from './CompatibilityModal';
 import RecommendationsModal from './RecommendationsModal';
 import SpotifyPlayerWithBounce from './SpotifyPlayerWithBounce';
 
-export default function Compatibility({ currentUserId }) {
-  const [users, setUsers] = useState([]);
-  const [selectedUser, setSelectedUser] = useState('');
+export default function Compatibility({ currentUserId, users, selectedUser, setSelectedUser }) {
+
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -29,19 +30,6 @@ export default function Compatibility({ currentUserId }) {
   // Modal for reverse recommendations
   const [showReverseRecModal, setShowReverseRecModal] = useState(false);
 
-  // Fetch all users except self
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-    fetch(`${API_URL}/api/users`, {
-      headers: { 'Authorization': 'Bearer ' + token }
-    })
-      .then(res => res.ok ? res.json() : Promise.reject())
-      .then(data => {
-        setUsers((data.users || []).filter(u => u._id !== currentUserId));
-      })
-      .catch(() => setUsers([]));
-  }, [currentUserId]);
 
   // Handle compatibility fetch
   const handleCompare = async () => {
@@ -95,14 +83,11 @@ export default function Compatibility({ currentUserId }) {
     <div className="music-profile-container" style={{ minHeight: '100vh', background: '#111', padding: '36px 0' }}>
       {error && <div style={{ color: 'red', marginBottom: 10 }}>{error}</div>}
       <div className="compat-card">
-        <h1 className="compat-title">Compare Music Compatibility</h1>
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>
-          <select value={selectedUser} onChange={e => setSelectedUser(e.target.value)} style={{ fontSize: 16, padding: '7px 14px', borderRadius: 8, border: '1px solid #bbb', marginRight: 8 }}>
-            <option value="">Select user</option>
-            {users.map(u => <option key={u._id} value={u._id}>{u.username}</option>)}
-          </select>
-          <button onClick={handleCompare} style={{ fontSize: 16, fontWeight: 600, padding: '7px 18px', borderRadius: 8, border: 'none', background: '#1db954', color: '#fff', cursor: 'pointer', boxShadow: '0 2px 8px #1db95433' }}>Compare</button>
-        </div> 
+        {selectedUser && (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>
+            <button onClick={handleCompare} style={{ fontSize: 16, fontWeight: 600, padding: '7px 18px', borderRadius: 8, border: 'none', background: '#1db954', color: '#fff', cursor: 'pointer', boxShadow: '0 2px 8px #1db95433' }}>Compare</button>
+          </div>
+        )}
         {loading && <div>Loading...</div>}
         {result && (
           <React.Fragment>
