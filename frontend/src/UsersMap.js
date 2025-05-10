@@ -4,7 +4,7 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { createProfileIcon } from './ProfileMarker';
 import 'leaflet/dist/leaflet.css';
 
-export default function UsersMap() {
+export default function UsersMap({ onUserSelect }) {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -68,14 +68,10 @@ export default function UsersMap() {
             key={user._id}
             position={[user.location.latitude, user.location.longitude]}
             icon={createProfileIcon(user.profilePicture, user.compatibilityScore ?? null)}
-          >
-            <Popup>
-              <b>{user.username}</b><br/>
-              {user.city && <span>City: {user.city}<br/></span>}
-              {user.gender && <span>Gender: {user.gender}<br/></span>}
-              {user.birthday && <span>Birthday: {user.birthday.substr(0,10)}<br/></span>}
-            </Popup>
-          </Marker>
+            eventHandlers={{
+              click: () => onUserSelect && onUserSelect(user._id)
+            }}
+          />
         ))}
       </MapContainer>
       <style>{`

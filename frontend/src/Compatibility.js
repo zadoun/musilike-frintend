@@ -79,15 +79,19 @@ export default function Compatibility({ currentUserId, users, selectedUser, setS
     setReverseLoading(false);
   };
 
+  // Automatically trigger compare when selectedUser changes
+  useEffect(() => {
+    if (selectedUser) {
+      handleCompare();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedUser]);
+
   return (
     <div className="music-profile-container" style={{ minHeight: '100vh', background: '#111', padding: '36px 0' }}>
       {error && <div style={{ color: 'red', marginBottom: 10 }}>{error}</div>}
       <div className="compat-card">
-        {selectedUser && (
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>
-            <button onClick={handleCompare} style={{ fontSize: 16, fontWeight: 600, padding: '7px 18px', borderRadius: 8, border: 'none', background: '#1db954', color: '#fff', cursor: 'pointer', boxShadow: '0 2px 8px #1db95433' }}>Compare</button>
-          </div>
-        )}
+
         {loading && <div>Loading...</div>}
         {result && (
           <React.Fragment>

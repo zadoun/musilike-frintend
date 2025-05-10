@@ -25,7 +25,7 @@ export default function UsersMapWithCompatibility({ currentUserId }) {
   return (
     <div style={{ width: '100%', minHeight: '100vh', background: '#fafbfc' }}>
       <div style={{ margin: '38px auto 0 auto', maxWidth: 900 }}>
-        <UsersMap />
+        <UsersMap onUserSelect={setSelectedUser} />
       </div>
       <div style={{ margin: '18px auto 0 auto', width: '100%', maxWidth: 440 }}>
         <Autocomplete
