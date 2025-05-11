@@ -135,7 +135,7 @@ export default function Compatibility({ currentUserId, users, selectedUser, setS
               className="compat-score-zone"
               onClick={() => setShowModal(true)}
               title="Click for compatibility details"
-              style={{ marginTop: 10, marginBottom: 6, padding: '10px 10px 30px 10px', cursor: 'pointer', minWidth: 120 }}>
+              style={{ marginTop: 20, marginBottom: 6, padding: '10px 10px 40px 10px', cursor: 'pointer', minWidth: 120 }}>
               <div className="compat-score-row">
                 <CompatibilityBadge className="compat-badge-svg" width={32} height={32} style={{ marginRight: 0, flexShrink: 0 }} />
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
