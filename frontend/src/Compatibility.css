@@ -14,6 +14,11 @@
   margin: 0 0 14px 0;
   letter-spacing: 1px;
   text-align: center;
+  padding-top: 0;
+}
+
+.compat-avatar-block {
+  margin-top: 0 !important;
 }
 
 
@@ -44,9 +49,16 @@
   overflow: visible;
 }
 
-.compat-avatar-btn svg {
+.compat-avatar-btn.right svg {
   color: #FFF2CC !important;
   fill: #FFF2CC !important;
+  vertical-align: middle;
+  overflow: visible;
+}
+
+.compat-avatar-btn.left svg {
+  color: #DBB77B !important;
+  fill: #DBB77B !important;
   vertical-align: middle;
   overflow: visible;
 }
@@ -70,12 +82,12 @@
   height: 120px;
   object-fit: cover;
   border-radius: 50%;
-  border: 2x solid #fff;
+  border: 1px solid #FFF2CC;
   box-shadow: 0 2px 12px #0004;
 }
 
 .compat-score-zone {
-  margin-top: 10px;
+  margin-top: 0px;
   margin-bottom: 18px; /* More space below score */
   background: #181818;
   border-radius: 12px;
@@ -142,13 +154,13 @@
 .compat-score-value {
   font-weight: 700;
   font-size: 34px;
-  color: #1db954;
+  color: #DBB77B;
   line-height: 1;
   margin-bottom: 2px;
 }
 
 .compat-score-label {
-  color: #1db954;
+  color: #FFF2CC;
   font-weight: 500;
   font-size: 15px;
 }
@@ -230,3 +242,36 @@
   align-items: center;
   gap: 16px;
 }
+
+.compat-score-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  gap: 12px;
+}
+
+.compat-badge-svg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-right: 10px;
+  padding: 2px 2px 2px 4px;
+  object-fit: contain;
+  background: transparent;
+  overflow: visible;
+  flex-shrink: 0;
+}
+
+.compat-score-row > div {
+  margin-left: 2px;
+  min-width: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+}
+

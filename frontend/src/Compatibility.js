@@ -91,7 +91,7 @@ export default function Compatibility({ currentUserId, users, selectedUser, setS
   }, [selectedUser]);
 
   return (
-    <div className="music-profile-container" style={{ minHeight: '100vh', background: '#111', padding: '36px 0' }}>
+    <div className="music-profile-container" style={{ minHeight: '100vh', background: '#111', padding: '0 0' }}>
       {error && <div style={{ color: 'red', marginBottom: 10 }}>{error}</div>}
       <div className="compat-card">
 
@@ -99,30 +99,30 @@ export default function Compatibility({ currentUserId, users, selectedUser, setS
         {result && (
           <React.Fragment>
             {/* Avatar block */}
-            <div className="compat-avatar-block" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px auto', width: '100%' }}>
-              <div style={{ fontWeight: 700, color: '#DBB77B', fontSize: 21, margin: '0 0 14px 0', letterSpacing: 1, textAlign: 'center' }}>{users.find(u => u._id === selectedUser)?.username || ''}</div>
+            <div className="compat-avatar-block" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', margin: 0, width: '100%' }}>
+              <div style={{ fontWeight: 700, color: '#FFF2CC', fontSize: 36, margin: '0 0 30px 0', letterSpacing: 1, textAlign: 'center' }}>{users.find(u => u._id === selectedUser)?.username || ''}</div>
               <div className="compat-avatar-row" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 0, position: 'relative' }}>
                 <button
                   className="compat-avatar-btn left"
                   title={`music recommendations for ${users.find(u => u._id === selectedUser)?.username || ''}`}
-                  style={{ background: 'none', border: 'none', padding: 0, marginRight: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 2, width: 'auto', height: 'auto' }}
+                  style={{ background: 'none', color: '#DBB77B',border: 'none', padding: 0, marginRight: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 2, width: 'auto', height: 'auto' }}
                   onClick={() => recommendations.length > 0 && setShowRecModal(true)}
                   disabled={recommendations.length === 0}
                 >
                   <SuggestRecommendationButton width={32} height={32} />
                 </button>
-                <div style={{ position: 'relative', width: 96, height: 96, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ position: 'relative', width: 150, height: 150, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <img
                     className="compat-avatar"
                     src={users.find(u => u._id === selectedUser)?.profilePicture || 'https://i.imgur.com/1Q9Z1Zm.png'}
                     alt={users.find(u => u._id === selectedUser)?.username + "'s profile"}
-                    style={{ width: 96, height: 96, objectFit: 'cover', borderRadius: '50%', border: '4px solid #fff', boxShadow: '0 2px 8px #0004' }}
+                    style={{ width: 150, height: 150, objectFit: 'cover', borderRadius: '50%', border: '2px solid #FFF2CC', boxShadow: '0 2px 8px #0004' }}
                   />
                 </div>
                 <button
                   className="compat-avatar-btn right"
                   title={`Get music recommendations from ${users.find(u => u._id === selectedUser)?.username || ''}`}
-                  style={{ background: 'none', border: 'none', padding: 0, marginLeft: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 2, width: 'auto', height: 'auto' }}
+                  style={{ background: 'none', border: 'none', padding: 0, marginLeft: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 2, width: 'auto', height: 'auto' }}
                   onClick={() => reverseRecs.length > 0 && setShowReverseRecModal(true)}
                   disabled={reverseRecs.length === 0}
                 >
@@ -135,12 +135,16 @@ export default function Compatibility({ currentUserId, users, selectedUser, setS
               className="compat-score-zone"
               onClick={() => setShowModal(true)}
               title="Click for compatibility details"
-              style={{ marginTop: 10, marginBottom: 6, background: '#181818', borderRadius: 12, padding: '10px 32px 8px 32px', boxShadow: '0 1px 8px #0002', display: 'inline-flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', minWidth: 120 }}>
-              <span style={{ fontSize: 30, color: '#FFF2CC', marginBottom: 2, display: 'block', textAlign: 'center' }}>🎵</span>
-              <span className="compat-score-value" style={{ fontSize: 30, fontWeight: 700, color: '#1db954', textAlign: 'center', margin: 0 }}>
-                {(result.scores.weightedScore * 100).toFixed(0)}%
-              </span>
-              <span className="compat-score-label" style={{ fontSize: 15, color: '#fff', fontWeight: 500, textAlign: 'center', marginTop: 2 }}>Compatibility</span>
+              style={{ marginTop: 10, marginBottom: 6, padding: '10px 10px 30px 10px', cursor: 'pointer', minWidth: 120 }}>
+              <div className="compat-score-row">
+                <CompatibilityBadge className="compat-badge-svg" width={32} height={32} style={{ marginRight: 0, flexShrink: 0 }} />
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                  <span className="compat-score-value">
+                    {(result.scores.weightedScore * 100).toFixed(0)}%
+                  </span>
+                  <span className="compat-score-label">Compatible</span>
+                </div>
+              </div>
             </div>
             {/* Last liked music below score */}
             {selectedUserLastTrack && selectedUserLastTrack.spotifyUrl && selectedUserLastTrack.spotifyUrl.includes('spotify.com/track/') && (
