@@ -177,16 +177,18 @@ export default function Compatibility({ currentUserId, users, selectedUser, setS
             <RecommendationsModal
               open={showRecModal}
               onClose={() => setShowRecModal(false)}
-              recommendations={recommendations}
+              recommendations={reverseRecs}
               title={"Recommended Tracks"}
               subtitle={users.find(u => u._id === selectedUser)?.username ? `for ${users.find(u => u._id === selectedUser)?.username}` : undefined}
             />
-            <RecommendationsModal
+            <CompatibilityModal
               open={showReverseRecModal}
               onClose={() => setShowReverseRecModal(false)}
-              recommendations={reverseRecs}
+              recommendations={recommendations}
+              users={users}
+              selectedUser={selectedUser}
               title={"Recommended Tracks"}
-              subtitle={users.find(u => u._id === selectedUser)?.username ? `from your list to ${users.find(u => u._id === selectedUser)?.username}` : undefined}
+              subtitle={users.find(u => u._id === selectedUser)?.username ? `from ${users.find(u => u._id === selectedUser)?.username} to you` : undefined}
             />
           </React.Fragment>
         )}

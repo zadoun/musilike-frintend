@@ -1,6 +1,43 @@
 import React from 'react';
+import SpotifyTrackWithActions from './SpotifyTrackWithActions';
 
 export default function RecommendationsModal({ open, onClose, recommendations, title, subtitle }) {
+  const [musilikedIds, setMusilikedIds] = React.useState([]);
+
+  // Fetch Musi-Liked track IDs when modal opens
+  React.useEffect(() => {
+    if (!open) return;
+    const fetchMusiliked = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      try {
+        const res = await fetch('/api/musiliked', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setMusilikedIds(Array.isArray(data.tracks) ? data.tracks.map(t => t.trackId) : []);
+        }
+      } catch {}
+    };
+    fetchMusiliked();
+  }, [open]);
+
+  // Helper to refresh musiliked after like/unlike
+  const refreshMusiliked = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    try {
+      const res = await fetch('/api/musiliked', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setMusilikedIds(Array.isArray(data.tracks) ? data.tracks.map(t => t.trackId) : []);
+      }
+    } catch {}
+  };
+
   if (!open || !recommendations || recommendations.length === 0) return null;
   return (
     <div style={{
@@ -15,12 +52,23 @@ export default function RecommendationsModal({ open, onClose, recommendations, t
           {title || 'Recommended Tracks'}
         </h2>
         {subtitle && (
-          <div style={{ fontSize: 17, fontWeight: 500, marginBottom: 14, textAlign: 'center', color: '#111' }}>{subtitle}</div>
+          <div style={{ fontSize: 28, fontWeight: 500, marginBottom: 14, textAlign: 'center', color: '#111' }}>{subtitle}</div>
         )}
         <ul style={{ margin: '6px 0 0 0', padding: 0, listStyle: 'none', color: '#111' }}>
-          {recommendations.slice(0, 20).map(t => (
-            <li key={t.trackId} style={{ marginBottom: 6 }}>
-              <span style={{ fontWeight: 500 }}>{t.trackName}</span> {t.artists && (<span style={{ color: '#111', fontSize: '0.97em' }}>({(t.artists||[]).join(', ')})</span>)}
+          {recommendations.slice(0, 10).map(t => (
+            <li key={t.trackId} style={{ marginBottom: 18 }}>
+              <SpotifyTrackWithActions
+                track={{
+                  id: t.trackId,
+                  name: t.trackName,
+                  artists: (t.artists || []).map(a => ({ name: a })),
+                  album: t.albumName ? { name: t.albumName, images: [{ url: t.albumImage }] } : undefined,
+                  external_urls: t.spotifyUrl ? { spotify: t.spotifyUrl } : undefined
+                }}
+                musilikedIds={musilikedIds}
+                refreshMusilikedIds={refreshMusiliked}
+                showRecommend={true}
+              />
             </li>
           ))}
         </ul>

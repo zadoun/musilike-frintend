@@ -105,38 +105,42 @@ function SpotifySearchBar({ onResults, onMusilikedChange }) {
           <ul className="spotify-search-results">
             {results.map(track => (
               <li key={track.id} className="spotify-search-result-item">
-                {track.id && (
-                  <div className="spotify-embed-player">
-                    <iframe
-                      src={`https://open.spotify.com/embed/track/${track.id}`}
-                      width="280"
-                      height="80"
-                      frameBorder="0"
-                      allowtransparency="true"
-                      allow="encrypted-media"
-                      title={`Spotify Player for ${track.name}`}
-                      style={{ borderRadius: 8 }}
-                    />
-                  </div>
-                )}
-                <div className="spotify-search-result-actions" style={{ marginLeft: 24 }}>
-                  <button
-                    className="recommend-btn"
-                    title="Recommend this song!"
-                    onClick={() => { setRecommendTrack(track); setRecommendOpen(true); }}
-                  >
-                    <span role="img" aria-label="music">🎵</span> <span style={{ fontSize: '0.75em' }}>Recommend!</span>
-                  </button>
-                  <MusilikeButton
-  track={track}
-  musilikedIds={musilikedIds}
-  refreshMusilikedIds={async () => {
-    await refreshMusiliked();
-    onMusilikedChange && onMusilikedChange();
-  }}
-/>
-                </div>
-              </li>
+  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+    {track.id && (
+      <div className="spotify-embed-player">
+        <iframe
+          src={`https://open.spotify.com/embed/track/${track.id}`}
+          width="280"
+          height="80"
+          frameBorder="0"
+          allowtransparency="true"
+          allow="encrypted-media"
+          title={`Spotify Player for ${track.name}`}
+          style={{ borderRadius: 8 }}
+        />
+      </div>
+    )}
+    <div className="spotify-search-result-actions" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 0, marginTop: 10, width: '100%' }}>
+      <button
+        className="recommend-btn"
+        title="Recommend this song!"
+        onClick={() => { setRecommendTrack(track); setRecommendOpen(true); }}
+        style={{ width: 130, height: 30, maxWidth: '90vw' }}
+      >
+        <span role="img" aria-label="music">🎵</span> <span style={{ fontSize: '0.95em', fontWeight: 600 }}>Recommend!</span>
+      </button>
+      <MusilikeButton
+        track={track}
+        musilikedIds={musilikedIds}
+        refreshMusilikedIds={async () => {
+          await refreshMusiliked();
+          onMusilikedChange && onMusilikedChange();
+        }}
+        style={{ width: 160, height: 10, maxWidth: '90vw' }}
+      />
+    </div>
+  </div>
+</li>
             ))}
           </ul>
         )}

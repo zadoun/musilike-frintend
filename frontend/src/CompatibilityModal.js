@@ -1,7 +1,93 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import SpotifyTrackWithActions from './SpotifyTrackWithActions';
 
-export default function CompatibilityModal({ open, onClose, result, users, selectedUser, recommendations }) {
-  if (!open || !result) return null;
+export default function CompatibilityModal({ open, onClose, result, users, selectedUser, recommendations, title, subtitle }) {
+  // Debug logging for recommendations direction
+  React.useEffect(() => {
+    if (result) {
+      console.log('[CompatibilityModal] sharedRecommendedLikedAtoB:', result.sharedRecommendedLikedAtoB);
+      console.log('[CompatibilityModal] sharedRecommendedLikedBtoA:', result.sharedRecommendedLikedBtoA);
+    }
+  }, [result]);
+
+  const [musilikedIds, setMusilikedIds] = useState([]);
+
+  // Fetch Musi-Liked track IDs on mount
+  useEffect(() => {
+    const fetchMusiliked = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      try {
+        const res = await fetch('/api/musiliked', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setMusilikedIds(Array.isArray(data.tracks) ? data.tracks.map(t => t.trackId) : []);
+        }
+      } catch {}
+    };
+    fetchMusiliked();
+  }, [open]);
+
+  // Helper to refresh musiliked after like/unlike
+  const refreshMusiliked = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    try {
+      const res = await fetch('/api/musiliked', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setMusilikedIds(Array.isArray(data.tracks) ? data.tracks.map(t => t.trackId) : []);
+      }
+    } catch {}
+  };
+
+  if (!open) return null;
+
+  // If opened for recommendations only (no result), show only recommendations with title/subtitle
+  if (!result && recommendations && recommendations.length > 0) {
+    return (
+      <div className="compatibility-modal-overlay" style={{
+        position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+        background: 'rgba(0,0,0,0.51)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center'
+      }}>
+        <div style={{ background: '#fff', borderRadius: 12, padding: '34px 32px 24px 32px', minWidth: 350, maxWidth: 440, boxShadow: '0 8px 32px rgba(0,0,0,0.13)', position: 'relative', color: '#111' }}>
+          <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, background: 'none', border: 'none', fontSize: 24, cursor: 'pointer', color: '#1db954' }}>×</button>
+          <h2 style={{ marginTop: 0, marginBottom: 18, textAlign: 'center', color: '#1db954', fontWeight: 700, fontSize: 24 }}>
+            {title || 'Recommended Tracks'}
+          </h2>
+          {subtitle && (
+            <div style={{ fontSize: 28, fontWeight: 500, marginBottom: 14, textAlign: 'center', color: '#111' }}>{subtitle}</div>
+          )}
+          <ul style={{ margin: '6px 0 0 0', padding: 0, listStyle: 'none', color: '#111' }}>
+            {recommendations.slice(0, 10).map(t => (
+              <li key={t.trackId} style={{ marginBottom: 18 }}>
+                <SpotifyTrackWithActions
+                  track={{
+                    id: t.trackId,
+                    name: t.trackName,
+                    artists: (t.artists || []).map(a => ({ name: a })),
+                    album: t.albumName ? { name: t.albumName, images: [{ url: t.albumImage }] } : undefined,
+                    external_urls: t.spotifyUrl ? { spotify: t.spotifyUrl } : undefined
+                  }}
+                  musilikedIds={musilikedIds}
+                  refreshMusilikedIds={refreshMusiliked}
+                  showRecommend={true}
+                />
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    );
+  }
+  // Defensive: allow modal to open even if result is temporarily missing
+  if (!result) {
+    return null;
+  }
   const selectedUserObj = users.find(u => u._id === selectedUser);
 
   // Defensive checks for flexible backend fields
@@ -20,9 +106,9 @@ export default function CompatibilityModal({ open, onClose, result, users, selec
   const sharedRecommendedLikedAtoB = result.sharedRecommendedLikedAtoB || [];
   const sharedRecommendedLikedBtoA = result.sharedRecommendedLikedBtoA || [];
   return (
-    <div style={{
+    <div className="compatibility-modal-overlay" style={{
       position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-      background: 'rgba(0,0,0,0.37)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center'
+      background: 'rgba(0,0,0,0.51)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center'
     }}>
       <div style={{
         background: '#fff', borderRadius: 12, padding: '34px 32px 24px 32px', minWidth: 350, maxWidth: 440, boxShadow: '0 8px 32px rgba(0,0,0,0.13)', position: 'relative'
@@ -116,21 +202,36 @@ export default function CompatibilityModal({ open, onClose, result, users, selec
             </div>
           )}
         </div>
-        {/* Shared Tracks (track name and artists if available) */}
+        {/* Shared Tracks (Spotify-style) */}
         <div style={{ marginBottom: 14, color: '#111' }}>
           <b>Shared Tracks:</b>
           <ul style={{ margin: '6px 0 0 0', padding: 0, listStyle: 'none', color: '#111' }}>
             {(result.sharedTracks && result.sharedTracks.length > 0
               ? result.sharedTracks.map(track => (
-                  <li key={track.trackId} style={{ marginBottom: 2 }}>
-                    {track.trackName || track.trackId}
-                    {track.artists && track.artists.length > 0 && (
-                      <span style={{ color: '#111', fontSize: '0.97em' }}> ({track.artists.join(', ')})</span>
-                    )}
+                  <li key={track.trackId} style={{ marginBottom: 18 }}>
+                    <SpotifyTrackWithActions
+                      track={{
+                        id: track.trackId,
+                        name: track.trackName,
+                        artists: (track.artists || []).map(a => ({ name: a })),
+                        album: track.albumName ? { name: track.albumName, images: [{ url: track.albumImage }] } : undefined,
+                        external_urls: track.spotifyUrl ? { spotify: track.spotifyUrl } : undefined
+                      }}
+                      musilikedIds={musilikedIds}
+                      refreshMusilikedIds={refreshMusiliked}
+                      showRecommend={false}
+                    />
                   </li>
                 ))
               : sharedTrackIds.map(tid => (
-                  <li key={tid} style={{ marginBottom: 2 }}>{tid}</li>
+                  <li key={tid} style={{ marginBottom: 18 }}>
+                    <SpotifyTrackWithActions
+                      track={{ id: tid, name: tid, artists: [], album: undefined, external_urls: undefined }}
+                      musilikedIds={musilikedIds}
+                      refreshMusilikedIds={refreshMusiliked}
+                      showRecommend={false}
+                    />
+                  </li>
                 ))
             )}
           </ul>
@@ -148,13 +249,26 @@ export default function CompatibilityModal({ open, onClose, result, users, selec
         <div style={{ color: '#111', marginBottom: 14 }}>
           <b>Shared Profile Genres:</b> {sharedProfileGenres.join(', ')}
         </div>
-        {/* Recommended Tracks */}
+        {/* Recommended Tracks (Spotify-style) */}
         {recommendations && recommendations.length > 0 && (
           <div style={{ marginTop: 22, color: '#111' }}>
             <b>Recommended Tracks:</b>
             <ul style={{ margin: '6px 0 0 0', padding: 0, listStyle: 'none', color: '#111' }}>
               {recommendations.slice(0, 10).map(t => (
-                <li key={t.trackId} style={{ marginBottom: 2 }}>{t.trackName} {t.artists && (<span style={{ color: '#111', fontSize: '0.97em' }}>({(t.artists||[]).join(', ')})</span>)}</li>
+                <li key={t.trackId} style={{ marginBottom: 18 }}>
+                  <SpotifyTrackWithActions
+                    track={{
+                      id: t.trackId,
+                      name: t.trackName,
+                      artists: (t.artists || []).map(a => ({ name: a })),
+                      album: t.albumName ? { name: t.albumName, images: [{ url: t.albumImage }] } : undefined,
+                      external_urls: t.spotifyUrl ? { spotify: t.spotifyUrl } : undefined
+                    }}
+                    musilikedIds={musilikedIds}
+                    refreshMusilikedIds={refreshMusiliked}
+                    showRecommend={true}
+                  />
+                </li>
               ))}
             </ul>
           </div>
