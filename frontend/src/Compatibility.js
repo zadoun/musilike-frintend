@@ -12,7 +12,49 @@ import CompatibilityModal from './CompatibilityModal';
 import RecommendationsModal from './RecommendationsModal';
 import SpotifyPlayerWithBounce from './SpotifyPlayerWithBounce';
 
+// Helper to render stars for skill level
+function renderStars(level) {
+  // Map level to number of stars (beginner=1, intermediate=2, advanced=3)
+  let stars = 1;
+  if (level === 'intermediate') stars = 2;
+  if (level === 'advanced') stars = 3;
+  const filled = '★'.repeat(stars);
+  const empty = '☆'.repeat(3 - stars);
+  return (
+    <span style={{ color: '#BFA05A', fontSize: 17, marginLeft: 3 }}>
+      {filled}{empty}
+    </span>
+  );
+}
+
 export default function Compatibility({ currentUserId, users, selectedUser, setSelectedUser }) {
+  const [showProfileBubble, setShowProfileBubble] = useState(false);
+  const [profileUser, setProfileUser] = useState(null);
+
+  // Fetch latest profile when modal opens
+  useEffect(() => {
+    if (!showProfileBubble || !selectedUser) return;
+    console.log('[ProfileBubble] Fetching user profile for id:', selectedUser);
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch(`/api/users/${selectedUser}`);
+        if (res.ok) {
+          const data = await res.json();
+          console.log('[ProfileBubble] Fetched user data from backend:', data);
+          setProfileUser(data);
+        } else {
+          const fallback = users.find(u => u._id === selectedUser) || null;
+          console.warn('[ProfileBubble] Backend fetch failed, using fallback from users[]:', fallback);
+          setProfileUser(fallback);
+        }
+      } catch (err) {
+        const fallback = users.find(u => u._id === selectedUser) || null;
+        console.error('[ProfileBubble] Error fetching user profile:', err, 'Using fallback:', fallback);
+        setProfileUser(fallback);
+      }
+    };
+    fetchProfile();
+  }, [showProfileBubble, selectedUser, users]);
 
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -91,15 +133,16 @@ export default function Compatibility({ currentUserId, users, selectedUser, setS
   }, [selectedUser]);
 
   return (
-    <div className="music-profile-container" style={{ minHeight: '100vh', background: '#111', padding: '0 0' }}>
+    <div className="music-profile-container" style={{ minHeight: '0vh', background: '#111', padding: '0 0' }}>
       {error && <div style={{ color: 'red', marginBottom: 10 }}>{error}</div>}
       <div className="compat-card">
 
         {loading && <div>Loading...</div>}
         {result && (
-          <React.Fragment>
+          <>
+
             {/* Avatar block */}
-            <div className="compat-avatar-block" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', margin: 0, width: '100%' }}>
+            <div className="compat-avatar-block" style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 180 }}>
               <div style={{ fontWeight: 700, color: '#FFF2CC', fontSize: 36, margin: '0 0 30px 0', letterSpacing: 1, textAlign: 'center' }}>{users.find(u => u._id === selectedUser)?.username || ''}</div>
               <div className="compat-avatar-row" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 0, position: 'relative' }}>
                 <button
@@ -111,12 +154,13 @@ export default function Compatibility({ currentUserId, users, selectedUser, setS
                 >
                   <SuggestRecommendationButton width={32} height={32} />
                 </button>
-                <div style={{ position: 'relative', width: 150, height: 150, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ position: 'relative', width: 150, height: 150, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
                   <img
                     className="compat-avatar"
                     src={users.find(u => u._id === selectedUser)?.profilePicture || 'https://i.imgur.com/1Q9Z1Zm.png'}
-                    alt={users.find(u => u._id === selectedUser)?.username + "'s profile"}
-                    style={{ width: 150, height: 150, objectFit: 'cover', borderRadius: '50%', border: '2px solid #FFF2CC', boxShadow: '0 2px 8px #0004' }}
+                    alt="User Avatar"
+                    style={{ cursor: 'pointer', width: 150, height: 150, objectFit: 'cover', borderRadius: '50%', border: '2px solid #FFF2CC', boxShadow: '0 2px 8px #0004', display: 'block', margin: '0 auto' }}
+                    onClick={() => setShowProfileBubble(v => !v)}
                   />
                 </div>
                 <button
@@ -130,7 +174,54 @@ export default function Compatibility({ currentUserId, users, selectedUser, setS
                 </button>
               </div>
             </div>
+            {showProfileBubble && profileUser && (
+  (() => { console.log('[DEBUG] profileUser:', profileUser); return null; })(),
+  <div className="profile-bubble-slide" style={{
+    marginTop: 8,
+    display: 'flex',
+    justifyContent: 'center',
+    animation: 'slideDown 0.35s cubic-bezier(.42,1.2,.47,.97)'
+  }}>
+    <div className="profile-bubble-bubble">
+      <div className="profile-bubble-pointer" />
+      <div className="profile-bubble-content">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                      <span style={{ fontSize: 18, color: '#8C7B5C', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span role="img" aria-label="location">📍</span> {profileUser.city || profileUser.location?.city || (profileUser.location && profileUser.location.latitude && profileUser.location.longitude ? 'Unknown city' : 'N/A')}
+                      </span>
+                      <span style={{ fontSize: 18, color: '#8C7B5C' }}>{profileUser.age ? profileUser.age + ' ans' : (profileUser.birthday ? (new Date().getFullYear() - new Date(profileUser.birthday).getFullYear()) + ' ans' : 'N/A')}</span>
+                      <span style={{ fontSize: 18, color: '#8C7B5C' }}>{profileUser.gender === 'female' ? '♀' : profileUser.gender === 'male' ? '♂' : ''}</span>
+                    </div>
+                    {/* Music skills */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      {/* Singer fallback logic */}
+{(profileUser.musicSkills?.isSinger || profileUser.singer) && (
+  <div style={{ display: 'flex', alignItems: 'center', fontSize: 17, color: '#BFA05A', gap: 8 }}>
+    <span role="img" aria-label="mic">🎤</span> Singer {renderStars(profileUser.musicSkills?.singerLevel || 'beginner')}
+  </div>
+)}
+{/* Musician instrument list, always show all instruments if present */}
+{(profileUser.musicSkills?.isMusician || profileUser.musician) && (
+  Array.isArray(profileUser.musicSkills?.instruments) && profileUser.musicSkills.instruments.length > 0 ? (
+    profileUser.musicSkills.instruments.map((inst, idx) => (
+      <div key={idx} style={{ display: 'flex', alignItems: 'center', fontSize: 17, color: '#BFA05A', gap: 8 }}>
+        <span role="img" aria-label={inst.name}>🎸</span> {inst.name} {renderStars(inst.level || 'beginner')}
+      </div>
+    ))
+  ) : (
+    // Only show fallback if array is missing or empty
+    <div style={{ display: 'flex', alignItems: 'center', fontSize: 17, color: '#BFA05A', gap: 8 }}>
+      <span role="img" aria-label="instrument">🎸</span> Instrument {renderStars('beginner')}
+    </div>
+  )
+)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
             {/* Compatibility score below avatar block */}
+
             <div
               className="compat-score-zone"
               onClick={() => setShowModal(true)}
@@ -190,7 +281,7 @@ export default function Compatibility({ currentUserId, users, selectedUser, setS
               title={"Recommended Tracks"}
               subtitle={users.find(u => u._id === selectedUser)?.username ? `from ${users.find(u => u._id === selectedUser)?.username} to you` : undefined}
             />
-          </React.Fragment>
+          </>
         )}
       </div>
     </div>

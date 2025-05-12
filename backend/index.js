@@ -230,6 +230,37 @@ app.put('/api/profile', async (req, res) => {
 
 // Recommend endpoints
 app.get('/api/users', RecommendController.listUsers);
+
+// GET /api/users/:id - Public profile by MongoDB _id
+app.get('/api/users/:id', async (req, res) => {
+  try {
+    console.log('[API] GET /api/users/:id requested for', req.params.id);
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      console.log('[API] User not found for id', req.params.id);
+      return res.status(404).json({ error: 'User not found' });
+    }
+    // Log the user object (omit sensitive fields if needed)
+    console.log('[API] User found:', user);
+    res.json({
+      _id: user._id,
+      username: user.username,
+      email: user.email,
+      profilePicture: user.profilePicture,
+      age: user.age,
+      city: user.city,
+      gender: user.gender,
+      birthday: user.birthday,
+      location: user.location,
+      musicSkills: user.musicSkills || {},
+      singer: user.musicSkills?.isSinger ?? false,
+      musician: user.musicSkills?.isMusician ?? false,
+    });
+  } catch (err) {
+    console.error('[API] Error in GET /api/users/:id', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 app.post('/api/recommend', RecommendController.sendRecommendation);
 app.get('/api/inbox', RecommendController.getInbox);
 app.post('/api/recommendation/:id/react', RecommendController.reactToRecommendation);

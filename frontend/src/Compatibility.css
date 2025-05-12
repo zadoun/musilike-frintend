@@ -86,6 +86,71 @@
   box-shadow: 0 2px 12px #0004;
 }
 
+/* Profile Bubble Slide-down Styles */
+.profile-bubble-slide {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  position: relative;
+  z-index: 10;
+  animation: slideDown 0.35s cubic-bezier(.42,1.2,.47,.97);
+}
+
+.profile-bubble-bubble {
+  position: relative;
+  background: #fff;
+  border-radius: 22px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.13);
+  min-width: 260px;
+  max-width: 350px;
+  padding: 18px 26px 14px 26px;
+  border: 2px solid #FFF2CC;
+  color: #111;
+  font-family: inherit;
+  font-size: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.profile-bubble-pointer {
+  position: absolute;
+  top: -18px;
+  left: 38px;
+  width: 36px;
+  height: 18px;
+  background: transparent;
+}
+.profile-bubble-pointer::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 36px;
+  height: 18px;
+  background: transparent;
+  border-bottom: 18px solid #fff;
+  border-left: 18px solid transparent;
+  border-right: 18px solid transparent;
+  filter: drop-shadow(0 2px 4px #0001);
+}
+
+.profile-bubble-content {
+  padding-top: 2px;
+}
+
+@keyframes slideDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-18px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .compat-score-zone {
   margin-top: 0px;
   margin-bottom: 18px; /* More space below score */
