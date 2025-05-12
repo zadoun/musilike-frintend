@@ -271,6 +271,7 @@ export default function Compatibility({ currentUserId, users, selectedUser, setS
               recommendations={reverseRecs}
               title={"Recommended Tracks"}
               subtitle={users.find(u => u._id === selectedUser)?.username ? `for ${users.find(u => u._id === selectedUser)?.username}` : undefined}
+              recipientId={selectedUser}
             />
             <CompatibilityModal
               open={showReverseRecModal}
