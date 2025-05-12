@@ -1,7 +1,7 @@
 import React from 'react';
 import SpotifyTrackWithActions from './SpotifyTrackWithActions';
 
-export default function RecommendationsModal({ open, onClose, recommendations, title, subtitle }) {
+export default function RecommendationsModal({ open, onClose, recommendations, title, subtitle, recipientId }) {
   const [musilikedIds, setMusilikedIds] = React.useState([]);
 
   // Fetch Musi-Liked track IDs when modal opens
@@ -55,22 +55,32 @@ export default function RecommendationsModal({ open, onClose, recommendations, t
           <div style={{ fontSize: 28, fontWeight: 500, marginBottom: 14, textAlign: 'center', color: '#111' }}>{subtitle}</div>
         )}
         <ul style={{ margin: '6px 0 0 0', padding: 0, listStyle: 'none', color: '#111' }}>
-          {recommendations.slice(0, 10).map(t => (
-            <li key={t.trackId} style={{ marginBottom: 18 }}>
-              <SpotifyTrackWithActions
-                track={{
-                  id: t.trackId,
-                  name: t.trackName,
-                  artists: (t.artists || []).map(a => ({ name: a })),
-                  album: t.albumName ? { name: t.albumName, images: [{ url: t.albumImage }] } : undefined,
-                  external_urls: t.spotifyUrl ? { spotify: t.spotifyUrl } : undefined
-                }}
-                musilikedIds={musilikedIds}
-                refreshMusilikedIds={refreshMusiliked}
-                showRecommend={true}
-              />
-            </li>
-          ))}
+          {recommendations.slice(0, 10).map(t => {
+            let toUserId = recipientId || t.toUserId || t.userId || t.recipientId;
+            const canSend = !!toUserId;
+            return (
+              <li key={t.trackId} style={{ marginBottom: 18 }}>
+                {!canSend && (
+                  <div style={{ color: 'red', marginBottom: 6, fontSize: 14 }}>
+                    Cannot send recommendation: recipient unknown.
+                  </div>
+                )}
+                <SpotifyTrackWithActions
+                  track={{
+                    id: t.trackId,
+                    name: t.trackName,
+                    artists: (t.artists || []).map(a => ({ name: a })),
+                    album: t.albumName ? { name: t.albumName, images: [{ url: t.albumImage }] } : undefined,
+                    external_urls: t.spotifyUrl ? { spotify: t.spotifyUrl } : undefined
+                  }}
+                  musilikedIds={musilikedIds}
+                  refreshMusilikedIds={refreshMusiliked}
+                  showRecommend={canSend}
+                  toUserId={toUserId}
+                />
+              </li>
+            );
+          })}
         </ul>
       </div>
     </div>
