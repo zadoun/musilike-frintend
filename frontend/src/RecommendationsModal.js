@@ -1,7 +1,10 @@
 import React from 'react';
 import SpotifyTrackWithActions from './SpotifyTrackWithActions';
 
+import { useSentRecommendations } from './hooks';
+
 export default function RecommendationsModal({ open, onClose, recommendations, title, subtitle, recipientId }) {
+  const [locallySent, setLocallySent] = React.useState([]);
   const [musilikedIds, setMusilikedIds] = React.useState([]);
 
   // Fetch Musi-Liked track IDs when modal opens
@@ -38,7 +41,24 @@ export default function RecommendationsModal({ open, onClose, recommendations, t
     } catch {}
   };
 
+  // Fetch sent recommendations for the recipient
+  const { sentTrackIds, loading: sentLoading } = useSentRecommendations(recipientId);
+
+  // Filter out tracks already recommended
+  const filteredRecs = React.useMemo(() => {
+    if (!recommendations) return [];
+    let recs = recommendations;
+    if (sentTrackIds && sentTrackIds.length > 0) {
+      recs = recs.filter(t => !sentTrackIds.includes(t.trackId || t.id));
+    }
+    if (locallySent && locallySent.length > 0) {
+      recs = recs.filter(t => !locallySent.includes(t.trackId || t.id));
+    }
+    return recs;
+  }, [recommendations, sentTrackIds, locallySent]);
+
   if (!open || !recommendations || recommendations.length === 0) return null;
+  if (sentLoading) return <div style={{color:'#888',padding:24}}>Loading recommendations...</div>;
   return (
     <div style={{
       position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
@@ -55,7 +75,10 @@ export default function RecommendationsModal({ open, onClose, recommendations, t
           <div style={{ fontSize: 28, fontWeight: 500, marginBottom: 14, textAlign: 'center', color: '#111' }}>{subtitle}</div>
         )}
         <ul style={{ margin: '6px 0 0 0', padding: 0, listStyle: 'none', color: '#111' }}>
-          {recommendations.slice(0, 10).map(t => {
+          {filteredRecs.length === 0 && (
+            <li style={{ color: '#888', padding: '18px 0', textAlign: 'center' }}>No new tracks to recommend to this user.</li>
+          )}
+          {filteredRecs.slice(0, 10).map(t => {
             let toUserId = recipientId || t.toUserId || t.userId || t.recipientId;
             const canSend = !!toUserId;
             return (
@@ -77,6 +100,7 @@ export default function RecommendationsModal({ open, onClose, recommendations, t
                   refreshMusilikedIds={refreshMusiliked}
                   showRecommend={canSend}
                   toUserId={toUserId}
+                  onRecommend={() => setLocallySent(prev => ([...(prev || []), t.trackId || t.id]))}
                 />
               </li>
             );

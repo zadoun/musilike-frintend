@@ -53,6 +53,9 @@ export default function SpotifyTrackWithActions({ track, musilikedIds, refreshMu
       if (res.ok) {
         setSent(true);
         setMessage('');
+        if (typeof onRecommend === 'function') {
+          onRecommend();
+        }
         setTimeout(() => {
           setShowMsg(false);
           setSent(false);
