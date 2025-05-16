@@ -87,7 +87,7 @@ export default function CompatibilityModal({ open, onClose, result, users, selec
                     }}
                     musilikedIds={musilikedIds}
                     refreshMusilikedIds={refreshMusiliked}
-                    showRecommend={canSend}
+                    showRecommend={false}
                     toUserId={recipientId}
                   />
                 </li>
@@ -139,32 +139,12 @@ export default function CompatibilityModal({ open, onClose, result, users, selec
             {selectedUserObj?.username && (<span>with <span style={{ color: '#1db954' }}>{selectedUserObj.username}</span></span>)}
           </div>
           <div style={{ marginBottom: 16, color: '#111' }}>
-            <div><b>Tracks:</b> {count.sharedTracks ?? sharedTrackIds.length} shared</div>
-            <div><b>Track Artists:</b> {count.sharedTrackArtists ?? sharedTrackArtists.length} shared</div>
-            <div><b>Track Genres:</b> {count.sharedTrackGenres ?? sharedTrackGenres.length} shared</div>
-            <div><b>Profile Artists:</b> {count.sharedProfileArtists ?? sharedProfileArtists.length} shared</div>
-            <div><b>Profile Genres:</b> {count.sharedProfileGenres ?? sharedProfileGenres.length} shared</div>
-            {/* Shared Artists/Genres */}
             <div style={{ color: '#111', marginBottom: 14 }}>
               <b>Shared Genres:</b> {sharedProfileGenres.join(', ')}
             </div>
             <div style={{ marginBottom: 14, color: '#111' }}>
               <b>Shared Artists:</b> {sharedTrackArtists.join(', ')}
             </div>
-            <div style={{ color: '#111', marginTop: 6, fontSize: 15 }}>
-              <small>
-                Weights: Track {Math.round((weights.track||0)*100)}% | TrackArtist {Math.round((weights.trackArtist||0)*100)}% | TrackGenre {Math.round((weights.trackGenre||0)*100)}% | ProfileArtist {Math.round((weights.profileArtist||0)*100)}% | ProfileGenre {Math.round((weights.profileGenre||0)*100)}% | SharedRecLiked {Math.round((weights.sharedRecommendationLiked||0)*100)}%
-              </small>
-            </div>
-            {/* Shared Recommendation Liked Score */}
-            {scores && typeof scores.sharedRecommendationLikedScore === 'number' && (
-              <div style={{ color: '#1db954', marginTop: 3, fontSize: 15 }}>
-                <small>
-                  <b>Shared Liked Recommendations Score:</b> {(scores.sharedRecommendationLikedScore * 100).toFixed(1)}%
-                </small>
-              </div>
-            )}
-            {/* Shared Recommendations Liked Lists */}
             {(sharedRecommendedLikedAtoB.length > 0 || sharedRecommendedLikedBtoA.length > 0) && (
               <div style={{ marginTop: 10, color: '#111' }}>
                 <b>Liked Recommendations:</b>
@@ -190,193 +170,9 @@ export default function CompatibilityModal({ open, onClose, result, users, selec
                 )}
               </div>
             )}
-            {/* Display new trackScore and both perspectives */}
-            {scores && typeof scores.trackScore === 'number' && (
-              <div style={{ color: '#111', marginTop: 3, fontSize: 15 }}>
-                <small>
-                  <b>Shared Tracks Score:</b> {(scores.trackScore * 100).toFixed(1)}% &nbsp;
-                  <span style={{ color: '#888' }}>
-                    (You: {(scores.trackScorePercentA * 100).toFixed(1)}% &nbsp;|
-                    {selectedUserObj?.username ? `${selectedUserObj.username}:` : 'Other:'} {(scores.trackScorePercentB * 100).toFixed(1)}%)
-                  </span>
-                </small>
-              </div>
-            )}
-            {/* Display new trackArtistScore and both perspectives */}
-            {scores && typeof scores.trackArtistScore === 'number' && (
-              <div style={{ color: '#111', marginTop: 3, fontSize: 15 }}>
-                <small>
-                  <b>Shared Track Artists Score:</b> {(scores.trackArtistScore * 100).toFixed(1)}% &nbsp;
-                  <span style={{ color: '#888' }}>
-                    (You: {(scores.trackArtistScorePercentA * 100).toFixed(1)}% &nbsp;|
-                    {selectedUserObj?.username ? `${selectedUserObj.username}:` : 'Other:'} {(scores.trackArtistScorePercentB * 100).toFixed(1)}%)
-                  </span>
-                </small>
-              </div>
-            )}
-            {/* Display new trackGenreScore and both perspectives */}
-            {scores && typeof scores.trackGenreScore === 'number' && (
-              <div style={{ color: '#111', marginTop: 3, fontSize: 15 }}>
-                <small>
-                  <b>Shared Track Genres Score:</b> {(scores.trackGenreScore * 100).toFixed(1)}% &nbsp;
-                  <span style={{ color: '#888' }}>
-                    (You: {(scores.trackGenreScorePercentA * 100).toFixed(1)}% &nbsp;|
-                    {selectedUserObj?.username ? `${selectedUserObj.username}:` : 'Other:'} {(scores.trackGenreScorePercentB * 100).toFixed(1)}%)
-                  </span>
-                </small>
-              </div>
-            )}
           </div>
-          <div style={{ color: '#111', marginTop: 6, fontSize: 15 }}>
-            <small>
-              Weights: Track {Math.round((weights.track||0)*100)}% | TrackArtist {Math.round((weights.trackArtist||0)*100)}% | TrackGenre {Math.round((weights.trackGenre||0)*100)}% | ProfileArtist {Math.round((weights.profileArtist||0)*100)}% | ProfileGenre {Math.round((weights.profileGenre||0)*100)}% | SharedRecLiked {Math.round((weights.sharedRecommendationLiked||0)*100)}%
-            </small>
-          </div>
-          {/* Shared Recommendation Liked Score */}
-          {scores && typeof scores.sharedRecommendationLikedScore === 'number' && (
-            <div style={{ color: '#1db954', marginTop: 3, fontSize: 15 }}>
-              <small>
-                <b>Shared Liked Recommendations Score:</b> {(scores.sharedRecommendationLikedScore * 100).toFixed(1)}%
-              </small>
-            </div>
-          )}
-          {/* Shared Recommendations Liked Lists */}
-          {(sharedRecommendedLikedAtoB.length > 0 || sharedRecommendedLikedBtoA.length > 0) && (
-            <div style={{ marginTop: 10, color: '#111' }}>
-              <b>Liked Recommendations:</b>
-              {sharedRecommendedLikedAtoB.length > 0 && (
-                <div style={{ marginTop: 4 }}>
-                  <span style={{ color: '#1db954' }}>From you to {selectedUserObj?.username}:</span>
-                  <ul style={{ margin: '2px 0 0 0', padding: 0, listStyle: 'none', color: '#111' }}>
-                    {sharedRecommendedLikedAtoB.map(t => (
-                      <li key={t.trackId || t._id} style={{ marginBottom: 2 }}>{t.trackName || t.trackId} {t.artists && (<span style={{ color: '#111', fontSize: '0.97em' }}>({(t.artists||[]).join(', ')})</span>)}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {sharedRecommendedLikedBtoA.length > 0 && (
-                <div style={{ marginTop: 4 }}>
-                  <span style={{ color: '#1db954' }}>From {selectedUserObj?.username} to you:</span>
-                  <ul style={{ margin: '2px 0 0 0', padding: 0, listStyle: 'none', color: '#111' }}>
-                    {sharedRecommendedLikedBtoA.map(t => (
-                      <li key={t.trackId || t._id} style={{ marginBottom: 2 }}>{t.trackName || t.trackId} {t.artists && (<span style={{ color: '#111', fontSize: '0.97em' }}>({(t.artists||[]).join(', ')})</span>)}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          )}
-          {/* Display new trackScore and both perspectives */}
-          {scores && typeof scores.trackScore === 'number' && (
-            <div style={{ color: '#111', marginTop: 3, fontSize: 15 }}>
-              <small>
-                <b>Shared Tracks Score:</b> {(scores.trackScore * 100).toFixed(1)}% &nbsp;
-                <span style={{ color: '#888' }}>
-                  (You: {(scores.trackScorePercentA * 100).toFixed(1)}% &nbsp;|
-                  {selectedUserObj?.username ? `${selectedUserObj.username}:` : 'Other:'} {(scores.trackScorePercentB * 100).toFixed(1)}%)
-                </span>
-              </small>
-            </div>
-          )}
-          {/* Display new trackArtistScore and both perspectives */}
-          {scores && typeof scores.trackArtistScore === 'number' && (
-            <div style={{ color: '#111', marginTop: 3, fontSize: 15 }}>
-              <small>
-                <b>Shared Track Artists Score:</b> {(scores.trackArtistScore * 100).toFixed(1)}% &nbsp;
-                <span style={{ color: '#888' }}>
-                  (You: {(scores.trackArtistScorePercentA * 100).toFixed(1)}% &nbsp;|
-                  {selectedUserObj?.username ? `${selectedUserObj.username}:` : 'Other:'} {(scores.trackArtistScorePercentB * 100).toFixed(1)}%)
-                </span>
-              </small>
-            </div>
-          )}
-          {/* Display new trackGenreScore and both perspectives */}
-          {scores && typeof scores.trackGenreScore === 'number' && (
-            <div style={{ color: '#111', marginTop: 3, fontSize: 15 }}>
-              <small>
-                <b>Shared Track Genres Score:</b> {(scores.trackGenreScore * 100).toFixed(1)}% &nbsp;
-                <span style={{ color: '#888' }}>
-                  (You: {(scores.trackGenreScorePercentA * 100).toFixed(1)}% &nbsp;|
-                  {selectedUserObj?.username ? `${selectedUserObj.username}:` : 'Other:'} {(scores.trackGenreScorePercentB * 100).toFixed(1)}%)
-                </span>
-              </small>
-            </div>
-          )}
         </div>
-        {/* Display new trackScore and both perspectives */}
-        {scores && typeof scores.trackScore === 'number' && (
-          <div style={{ color: '#111', marginTop: 3, fontSize: 15 }}>
-            <small>
-              <b>Shared Tracks Score:</b> {(scores.trackScore * 100).toFixed(1)}% &nbsp;
-              <span style={{ color: '#888' }}>
-                (You: {(scores.trackScorePercentA * 100).toFixed(1)}% &nbsp;|
-                {selectedUserObj?.username ? `${selectedUserObj.username}:` : 'Other:'} {(scores.trackScorePercentB * 100).toFixed(1)}%)
-              </span>
-            </small>
-          </div>
-        )}
-        {/* Display new trackArtistScore and both perspectives */}
-        {scores && typeof scores.trackArtistScore === 'number' && (
-          <div style={{ color: '#111', marginTop: 3, fontSize: 15 }}>
-            <small>
-              <b>Shared Track Artists Score:</b> {(scores.trackArtistScore * 100).toFixed(1)}% &nbsp;
-              <span style={{ color: '#888' }}>
-                (You: {(scores.trackArtistScorePercentA * 100).toFixed(1)}% &nbsp;|
-                {selectedUserObj?.username ? `${selectedUserObj.username}:` : 'Other:'} {(scores.trackArtistScorePercentB * 100).toFixed(1)}%)
-              </span>
-            </small>
-          </div>
-        )}
-        {/* Display new trackGenreScore and both perspectives */}
-        {scores && typeof scores.trackGenreScore === 'number' && (
-          <div style={{ color: '#111', marginTop: 3, fontSize: 15 }}>
-            <small>
-              <b>Shared Track Genres Score:</b> {(scores.trackGenreScore * 100).toFixed(1)}% &nbsp;
-              <span style={{ color: '#888' }}>
-                (You: {(scores.trackGenreScorePercentA * 100).toFixed(1)}% &nbsp;|
-                {selectedUserObj?.username ? `${selectedUserObj.username}:` : 'Other:'} {(scores.trackGenreScorePercentB * 100).toFixed(1)}%)
-              </span>
-            </small>
-          </div>
-        )}
-        {recommendations && recommendations.length > 0 && (
-          <div style={{ marginTop: 22, color: '#111' }}>
-            <b>Recommended Tracks:</b>
-            <ul style={{ margin: '6px 0 0 0', padding: 0, listStyle: 'none', color: '#111' }}>
-              {recommendations.slice(0, 10).map(t => {
-                // Fallback: Try to infer recipient if selectedUser is missing
-                let recipientId = selectedUser;
-                if (!recipientId) {
-                  recipientId = t.toUserId || t.userId || t.recipientId;
-                  console.log('[CompatibilityModal] Fallback recipientId from recommendation:', recipientId);
-                }
-                if (!recipientId) {
-                  console.warn('[CompatibilityModal] No recipientId found for recommendation:', t);
-                }
-                return (
-                  <li key={t.trackId} style={{ marginBottom: 18 }}>
-                    <SpotifyTrackWithActions
-                      track={{
-                        id: t.trackId,
-                        name: t.trackName,
-                        artists: (t.artists || []).map(a => ({ name: a })),
-                        album: t.albumName ? { name: t.albumName, images: [{ url: t.albumImage }] } : undefined,
-                        external_urls: t.spotifyUrl ? { spotify: t.spotifyUrl } : undefined
-                      }}
-                      musilikedIds={musilikedIds}
-                      refreshMusilikedIds={refreshMusiliked}
-                      showRecommend={true}
-                      toUserId={recipientId}
-                    />
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        )}
       </div>
-
     </div>
   );
 }
-
