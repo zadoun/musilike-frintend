@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import SpotifyTrackWithActions from './SpotifyTrackWithActions';
+import RadarCompatibilityChart from './RadarCompatibilityChart';
+// The badge icon for the compatibility score
+// (SVG import used via require to support dynamic usage in img tag)
+
 
 export default function CompatibilityModal({ open, onClose, result, users, selectedUser, recommendations, title, subtitle }) {
   // Debug logging for recommendations direction
@@ -118,9 +122,18 @@ export default function CompatibilityModal({ open, onClose, result, users, selec
   const sharedProfileArtists = result.sharedProfileArtists || [];
   const sharedProfileGenres = result.sharedProfileGenres || [];
 
-  // Prepare shared liked recommendations lists if present
+  // Prepare shared liked recommendations lists if present (now handled below)
+
+  // Compute directional liked recommendation percentages
+  const totalRecsAToB = (result.count?.totalRecommendationsExchanged || 0) > 0
+    ? (result.count?.totalRecommendationsExchanged || 0) / 2
+    : 0;
+  const totalRecsBToA = totalRecsAToB; // Assume symmetry; adjust if you have separate counts
   const sharedRecommendedLikedAtoB = result.sharedRecommendedLikedAtoB || [];
   const sharedRecommendedLikedBtoA = result.sharedRecommendedLikedBtoA || [];
+  // Defensive: avoid 0 division
+  const sharedRecommendationLikedPercentA = totalRecsBToA > 0 ? sharedRecommendedLikedBtoA.length / totalRecsBToA : 0;
+  const sharedRecommendationLikedPercentB = totalRecsAToB > 0 ? sharedRecommendedLikedAtoB.length / totalRecsAToB : 0;
 
   return (
     <div>
@@ -137,6 +150,29 @@ export default function CompatibilityModal({ open, onClose, result, users, selec
           </h2>
           <div style={{ fontSize: 17, fontWeight: 500, marginBottom: 14, textAlign: 'center', color: '#111' }}>
             {selectedUserObj?.username && (<span>with <span style={{ color: '#1db954' }}>{selectedUserObj.username}</span></span>)}
+          </div>
+          {/* Compatibility Score Badge */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 18 }}>
+            <img src={require('./CompatibilityBadge.svg').default} alt="compat badge" style={{ width: 44, height: 44, marginBottom: 2 }} />
+            <div className="compat-score-value" style={{ color: '#DBB77B', fontWeight: 700, fontSize: 34, lineHeight: 1, marginBottom: 2 }}>
+              {Math.round(((result?.score ?? result?.scores?.weightedScore ?? 0) * 100))}%
+            </div>
+            <div style={{ color: '#FFF2CC', fontWeight: 500, fontSize: 15 }}>
+              Compatible
+            </div>
+          </div>
+          {/* Radar Chart for Compatibility */}
+          <div style={{ marginBottom: 32, color: '#111', width: '100%', maxWidth: 420, minHeight: 360 }}>
+            <RadarCompatibilityChart
+              userAName="You"
+              userBName={selectedUserObj?.username || 'Other'}
+              data={[
+                { metric: 'Genres', you: (scores.trackGenreScorePercentA ?? 0) * 100, other: (scores.trackGenreScorePercentB ?? 0) * 100 },
+                { metric: 'Artists', you: (scores.trackArtistScorePercentA ?? 0) * 100, other: (scores.trackArtistScorePercentB ?? 0) * 100 },
+                { metric: 'Tracks', you: (scores.trackScorePercentA ?? 0) * 100, other: (scores.trackScorePercentB ?? 0) * 100 },
+                { metric: 'Liked Recs', you: sharedRecommendationLikedPercentA * 100, other: sharedRecommendationLikedPercentB * 100 },
+              ]}
+            />
           </div>
           <div style={{ marginBottom: 16, color: '#111' }}>
             <div style={{ color: '#111', marginBottom: 14 }}>
