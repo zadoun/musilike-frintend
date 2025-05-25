@@ -137,32 +137,19 @@ export default function CompatibilityModal({ open, onClose, result, users, selec
 
   return (
     <div>
-      <div className="compatibility-modal-overlay" style={{
-        position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-        background: 'rgba(0,0,0,0.51)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center'
-      }}>
-        <div style={{
-          background: '#fff', borderRadius: 12, padding: '34px 32px 24px 32px', minWidth: 350, maxWidth: 440, boxShadow: '0 8px 32px rgba(0,0,0,0.13)', position: 'relative'
-        }}>
-          <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, background: 'none', border: 'none', fontSize: 24, cursor: 'pointer', color: '#1db954' }}>×</button>
-          <h2 style={{ marginTop: 0, marginBottom: 18, textAlign: 'center', color: '#1db954', fontWeight: 700, fontSize: 24 }}>
-            Compatibility Details
-          </h2>
-          <div style={{ fontSize: 17, fontWeight: 500, marginBottom: 14, textAlign: 'center', color: '#111' }}>
-            {selectedUserObj?.username && (<span>with <span style={{ color: '#1db954' }}>{selectedUserObj.username}</span></span>)}
+      <div className="compatibility-modal-overlay" style={{position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.51)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+        <div className="compat-card" style={{position: 'relative', width: 700, maxWidth: '100%', padding: 0, borderRadius: 22, background: 'linear-gradient(180deg, #061024 0%, #292733 100%)'}}>
+          <button onClick={onClose} style={{ position: 'absolute', top: 18, right: 18, background: 'none', border: 'none', fontSize: 26, cursor: 'pointer', color: '#FFF2CC', zIndex: 2 }}>×</button>
+          <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 36, marginBottom: 0, padding: '0 32px'}}>
+            <span style={{fontSize: 28, color: '#E7D3A1', fontWeight: 500}}>You</span>
+            <img src={require('./CompatibilityBadge.svg').default} alt="compat badge" style={{ width: 44, height: 44, margin: '0 0 0 0' }} />
+            <span style={{fontSize: 28, color: '#E7D3A1', fontWeight: 500}}>{selectedUserObj?.username || 'Other'}</span>
           </div>
-          {/* Compatibility Score Badge */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 18 }}>
-            <img src={require('./CompatibilityBadge.svg').default} alt="compat badge" style={{ width: 44, height: 44, marginBottom: 2 }} />
-            <div className="compat-score-value" style={{ color: '#DBB77B', fontWeight: 700, fontSize: 34, lineHeight: 1, marginBottom: 2 }}>
-              {Math.round(((result?.score ?? result?.scores?.weightedScore ?? 0) * 100))}%
-            </div>
-            <div style={{ color: '#FFF2CC', fontWeight: 500, fontSize: 15 }}>
-              Compatible
-            </div>
+          <div style={{textAlign: 'center', margin: '8px 0 0 0', color: '#E7D3A1', fontWeight: 700, fontSize: 36, letterSpacing: 0.5}}>
+            {Math.round(((result?.score ?? result?.scores?.weightedScore ?? 0) * 100))}%
           </div>
-          {/* Radar Chart for Compatibility */}
-          <div style={{ marginBottom: 32, color: '#111', width: '100%', maxWidth: 420, minHeight: 360 }}>
+          <div style={{textAlign: 'center', color: '#E7D3A1', fontWeight: 400, fontSize: 22, marginBottom: 10, marginTop: 2, fontFamily: 'Georgia,serif'}}>compatible</div>
+          <div style={{margin: '0 auto 0 auto', width: '96%', minHeight: 260}}>
             <RadarCompatibilityChart
               userAName="You"
               userBName={selectedUserObj?.username || 'Other'}
@@ -174,38 +161,23 @@ export default function CompatibilityModal({ open, onClose, result, users, selec
               ]}
             />
           </div>
-          <div style={{ marginBottom: 16, color: '#111' }}>
-            <div style={{ color: '#111', marginBottom: 14 }}>
-              <b>Shared Genres:</b> {sharedProfileGenres.join(', ')}
-            </div>
-            <div style={{ marginBottom: 14, color: '#111' }}>
-              <b>Shared Artists:</b> {sharedTrackArtists.join(', ')}
-            </div>
-            {(sharedRecommendedLikedAtoB.length > 0 || sharedRecommendedLikedBtoA.length > 0) && (
-              <div style={{ marginTop: 10, color: '#111' }}>
-                <b>Liked Recommendations:</b>
-                {sharedRecommendedLikedAtoB.length > 0 && (
-                  <div style={{ marginTop: 4 }}>
-                    <span style={{ color: '#1db954' }}>From you to {selectedUserObj?.username}:</span>
-                    <ul style={{ margin: '2px 0 0 0', padding: 0, listStyle: 'none', color: '#111' }}>
-                      {sharedRecommendedLikedAtoB.map(t => (
-                        <li key={t.trackId || t._id} style={{ marginBottom: 2 }}>{t.trackName || t.trackId} {t.artists && (<span style={{ color: '#111', fontSize: '0.97em' }}>({(t.artists||[]).join(', ')})</span>)}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                {sharedRecommendedLikedBtoA.length > 0 && (
-                  <div style={{ marginTop: 4 }}>
-                    <span style={{ color: '#1db954' }}>From {selectedUserObj?.username} to you:</span>
-                    <ul style={{ margin: '2px 0 0 0', padding: 0, listStyle: 'none', color: '#111' }}>
-                      {sharedRecommendedLikedBtoA.map(t => (
-                        <li key={t.trackId || t._id} style={{ marginBottom: 2 }}>{t.trackName || t.trackId} {t.artists && (<span style={{ color: '#111', fontSize: '0.97em' }}>({(t.artists||[]).join(', ')})</span>)}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            )}
+          <div style={{margin: '0 0 0 0', padding: '0 32px'}}>
+            <div style={{color: '#E7D3A1', fontWeight: 600, fontSize: 28, margin: '0 0 6px 0'}}>Shared Genres</div>
+            <div style={{color: '#FFF2CC', fontSize: 22, marginBottom: 18, marginLeft: 2}}>{sharedProfileGenres.length ? sharedProfileGenres.join(' - ') : <span style={{color:'#7c7c7c', fontSize:18}}>None</span>}</div>
+            <div style={{color: '#E7D3A1', fontWeight: 600, fontSize: 28, margin: '0 0 6px 0'}}>Shared Artists</div>
+            <div style={{color: '#FFF2CC', fontSize: 22, marginBottom: 18, marginLeft: 2}}>{sharedTrackArtists.length ? sharedTrackArtists.join(' - ') : <span style={{color:'#7c7c7c', fontSize:18}}>None</span>}</div>
+            <div style={{color: '#E7D3A1', fontWeight: 600, fontSize: 28, margin: '0 0 6px 0'}}>Shared Tracks</div>
+            <div style={{color: '#FFF2CC', fontSize: 22, marginBottom: 0, marginLeft: 2}}>{
+  sharedTrackIds.length
+    ? sharedTrackIds.map((t, i) => {
+        // Try to get the track name from result.sharedTrackNames, or from result.sharedTracks if present
+        let trackName = (result.sharedTrackNames && result.sharedTrackNames[i])
+          || (result.sharedTracks && result.sharedTracks[i] && (result.sharedTracks[i].trackName || result.sharedTracks[i].name))
+          || t;
+        return <div key={t}>{trackName}</div>;
+      })
+    : <span style={{color:'#7c7c7c', fontSize:18}}>None</span>
+}</div>
           </div>
         </div>
       </div>

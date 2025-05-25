@@ -5,14 +5,38 @@ import { createProfileIcon } from './ProfileMarker';
 import 'leaflet/dist/leaflet.css';
 
 export default function UsersMap({ onUserSelect }) {
+
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [noToken, setNoToken] = useState(false);
+  const [token, setToken] = useState(() => localStorage.getItem('token'));
+
+  // Surveille le token dans localStorage (ex: après login/logout)
+  useEffect(() => {
+    const checkToken = () => {
+      const t = localStorage.getItem('token');
+      setToken(t);
+    };
+    window.addEventListener('storage', checkToken);
+    // Pour login sur même onglet, on vérifie aussi périodiquement
+    const interval = setInterval(checkToken, 500);
+    return () => {
+      window.removeEventListener('storage', checkToken);
+      clearInterval(interval);
+    };
+  }, []);
 
   useEffect(() => {
-    // Fetch all users with location
-    const token = localStorage.getItem('token');
-    if (!token) return setLoading(false);
+    if (!token) {
+      setNoToken(true);
+      setLoading(false);
+      setUsers([]);
+      return;
+    }
+    setNoToken(false);
+    setLoading(true);
+    setError('');
     fetch(`${API_URL}/api/users`, {
       headers: { 'Authorization': 'Bearer ' + token }
     })
@@ -22,7 +46,7 @@ export default function UsersMap({ onUserSelect }) {
         setLoading(false);
       })
       .catch(() => { setError('Could not load users'); setLoading(false); });
-  }, []);
+  }, [token]);
 
   // Default map center (Europe)
   const defaultCenter = [48.8588443, 2.2943506];
@@ -31,8 +55,9 @@ export default function UsersMap({ onUserSelect }) {
   const usersWithCoords = users.filter(u => u.location && u.location.latitude && u.location.longitude);
 
   if (loading) return <div>Loading map…</div>;
+  if (noToken) return <div style={{ color: '#b44', fontWeight: 600, margin: '40px 0', textAlign: 'center' }}>Veuillez vous connecter pour voir la carte des utilisateurs.</div>;
   if (error) return <div style={{color: 'red'}}>{error}</div>;
-  if (usersWithCoords.length === 0) return <div>No users with location to display.</div>;
+  if (usersWithCoords.length === 0) return <div>Aucun utilisateur à afficher sur la carte.</div>;
 
   return (
     <div

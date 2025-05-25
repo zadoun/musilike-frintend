@@ -6,11 +6,26 @@ import TextField from '@mui/material/TextField';
 import API_URL from './api';
 
 export default function UsersMapWithCompatibility({ currentUserId }) {
+
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState('');
+  const [token, setToken] = useState(() => localStorage.getItem('token'));
+
+  // Surveille le token dans localStorage (ex: après login/logout)
+  useEffect(() => {
+    const checkToken = () => {
+      const t = localStorage.getItem('token');
+      setToken(t);
+    };
+    window.addEventListener('storage', checkToken);
+    const interval = setInterval(checkToken, 500);
+    return () => {
+      window.removeEventListener('storage', checkToken);
+      clearInterval(interval);
+    };
+  }, []);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
     if (!token) return;
     fetch(`${API_URL}/api/users`, {
       headers: { 'Authorization': 'Bearer ' + token }
@@ -20,7 +35,7 @@ export default function UsersMapWithCompatibility({ currentUserId }) {
         setUsers((data.users || []).filter(u => u._id !== currentUserId));
       })
       .catch(() => setUsers([]));
-  }, [currentUserId]);
+  }, [currentUserId, token]);
 
   return (
     <div style={{ width: '100%', minHeight: '100vh', background: '#fafbfc' }}>

@@ -34,7 +34,8 @@ function Auth({ onAuth }) {
       }
       if (isLogin) {
         localStorage.setItem('token', data.token);
-        onAuth && onAuth({ email: data.email, username: data.username });
+
+      onAuth && onAuth({ email: data.email, username: data.username, _id: data._id });
       } else {
         setIsLogin(true);
         setSuccess('Registration successful! Please log in.');

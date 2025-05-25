@@ -128,6 +128,7 @@ function App() {
     }
   }, [user]);
 
+
   if (loading) return <div>Loading...</div>;
 
   return (
