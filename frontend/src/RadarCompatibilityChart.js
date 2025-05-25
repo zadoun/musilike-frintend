@@ -23,10 +23,15 @@ export default function RadarCompatibilityChart({ userAName = 'You', userBName =
         <PolarAngleAxis dataKey="metric" />
         <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
 
-        <Radar name={userAName} dataKey="you" stroke="#1db954" fill="#1db954" fillOpacity={0.4} />
-        <Radar name={userBName} dataKey="other" stroke="#8884d8" fill="#8884d8" fillOpacity={0.2} />
+        <Radar name={userAName} dataKey="you" stroke="#DBB77B" fill="#DBB77B" fillOpacity={0.45} />
+        <Radar name={userBName} dataKey="other" stroke="#FFF2CC" fill="#FFF2CC" fillOpacity={0.28} />
         <Legend />
-        <Tooltip formatter={(value) => `${Math.round(value)}%`} />
+        <Tooltip
+          formatter={(value) => `${Math.round(value)}%`}
+          contentStyle={{ background: '#181818', border: '1px solid #FFF2CC', borderRadius: 10, color: '#FFF2CC', fontWeight: 500, fontSize: 18, boxShadow: '0 4px 16px #0008', opacity: 0.97 }}
+          itemStyle={{ color: '#DBB77B' }}
+          labelStyle={{ color: '#FFF2CC', fontWeight: 700 }}
+        />
       </RadarChart>
     </ResponsiveContainer>
   );

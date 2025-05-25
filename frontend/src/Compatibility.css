@@ -86,6 +86,14 @@
   box-shadow: 0 2px 12px #0004;
 }
 
+/* Ajouté : Style pour les listes partagées (genres, artistes, tracks) */
+.compat-shared-list {
+  color: #FFF2CC;
+  font-size: 22px;
+  margin-bottom: 18px;
+  margin-left: 2px;
+}
+
 /* Profile Bubble Slide-down Styles */
 .profile-bubble-slide {
   width: 100%;

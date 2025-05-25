@@ -58,7 +58,7 @@ export default function CompatibilityModal({ open, onClose, result, users, selec
         position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
         background: 'rgba(0,0,0,0.51)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center'
       }}>
-        <div style={{ background: '#fff', borderRadius: 12, padding: '34px 32px 24px 32px', minWidth: 350, maxWidth: 440, boxShadow: '0 8px 32px rgba(0,0,0,0.13)', position: 'relative', color: '#111' }}>
+        <div style={{ background: '#fff', borderRadius: 12, padding: '34px 32px 24px 32px', minWidth: 350, maxWidth: 440, boxShadow: '0 8px 32px rgba(0,0,0,0.13)', position: 'relative', color: '#111', width: '100%' }}>
           <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, background: 'none', border: 'none', fontSize: 24, cursor: 'pointer', color: '#1db954' }}>×</button>
           <h2 style={{ marginTop: 0, marginBottom: 18, textAlign: 'center', color: '#1db954', fontWeight: 700, fontSize: 24 }}>
             {title || 'Recommended Tracks'}
@@ -138,7 +138,7 @@ export default function CompatibilityModal({ open, onClose, result, users, selec
   return (
     <div>
       <div className="compatibility-modal-overlay" style={{position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.51)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-        <div className="compat-card" style={{position: 'relative', width: 700, maxWidth: '100%', padding: 0, borderRadius: 22, background: 'linear-gradient(180deg, #061024 0%, #292733 100%)'}}>
+        <div className="compat-card" style={{position: 'relative', width: '100%', maxWidth: 440, padding: 0, borderRadius: 22, background: 'linear-gradient(180deg, #061024 0%, #292733 100%)'}}>
           <button onClick={onClose} style={{ position: 'absolute', top: 18, right: 18, background: 'none', border: 'none', fontSize: 26, cursor: 'pointer', color: '#FFF2CC', zIndex: 2 }}>×</button>
           <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 36, marginBottom: 0, padding: '0 32px'}}>
             <span style={{fontSize: 28, color: '#E7D3A1', fontWeight: 500}}>You</span>
@@ -149,7 +149,7 @@ export default function CompatibilityModal({ open, onClose, result, users, selec
             {Math.round(((result?.score ?? result?.scores?.weightedScore ?? 0) * 100))}%
           </div>
           <div style={{textAlign: 'center', color: '#E7D3A1', fontWeight: 400, fontSize: 22, marginBottom: 10, marginTop: 2, fontFamily: 'Georgia,serif'}}>compatible</div>
-          <div style={{margin: '0 auto 0 auto', width: '96%', minHeight: 260}}>
+          <div style={{margin: '0 auto 42px auto', width: '96%', minHeight: 260}}>
             <RadarCompatibilityChart
               userAName="You"
               userBName={selectedUserObj?.username || 'Other'}
@@ -163,11 +163,11 @@ export default function CompatibilityModal({ open, onClose, result, users, selec
           </div>
           <div style={{margin: '0 0 0 0', padding: '0 32px'}}>
             <div style={{color: '#E7D3A1', fontWeight: 600, fontSize: 28, margin: '0 0 6px 0'}}>Shared Genres</div>
-            <div style={{color: '#FFF2CC', fontSize: 22, marginBottom: 18, marginLeft: 2}}>{sharedProfileGenres.length ? sharedProfileGenres.join(' - ') : <span style={{color:'#7c7c7c', fontSize:18}}>None</span>}</div>
+            <div className="compat-shared-list">{sharedProfileGenres.length ? sharedProfileGenres.join(' - ') : <span className="compat-shared-list-none">None</span>}</div>
             <div style={{color: '#E7D3A1', fontWeight: 600, fontSize: 28, margin: '0 0 6px 0'}}>Shared Artists</div>
-            <div style={{color: '#FFF2CC', fontSize: 22, marginBottom: 18, marginLeft: 2}}>{sharedTrackArtists.length ? sharedTrackArtists.join(' - ') : <span style={{color:'#7c7c7c', fontSize:18}}>None</span>}</div>
+            <div className="compat-shared-list">{sharedTrackArtists.length ? sharedTrackArtists.join(' - ') : <span className="compat-shared-list-none">None</span>}</div>
             <div style={{color: '#E7D3A1', fontWeight: 600, fontSize: 28, margin: '0 0 6px 0'}}>Shared Tracks</div>
-            <div style={{color: '#FFF2CC', fontSize: 22, marginBottom: 0, marginLeft: 2}}>{
+            <div className="compat-shared-list">{
   sharedTrackIds.length
     ? sharedTrackIds.map((t, i) => {
         // Try to get the track name from result.sharedTrackNames, or from result.sharedTracks if present
