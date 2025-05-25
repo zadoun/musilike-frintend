@@ -145,6 +145,25 @@ app.get('/api/spotify/mixed-artists-by-genre', async (req, res) => {
 
 // Update liked artistes (protected)
 app.put('/api/profile/artistes', async (req, res) => {
+
+// Update liked tracks (protected)
+app.put('/api/profile/tracks', async (req, res) => {
+  const auth = req.headers.authorization;
+  if (!auth) return res.status(401).json({ error: 'No token provided.' });
+  const token = auth.split(' ')[1];
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev_secret');
+    const user = await User.findOne({ email: decoded.email });
+    if (!user) return res.status(404).json({ error: 'User not found.' });
+    const { tracks } = req.body;
+    if (!Array.isArray(tracks)) return res.status(400).json({ error: 'Tracks must be an array.' });
+    user.musiliked_tracks = tracks;
+    await user.save();
+    res.json({ message: 'Tracks updated.', musiliked_tracks: user.musiliked_tracks });
+  } catch (err) {
+    res.status(500).json({ error: 'Could not update tracks.' });
+  }
+});
   const auth = req.headers.authorization;
   if (!auth) return res.status(401).json({ error: 'No token provided.' });
   const token = auth.split(' ')[1];
@@ -183,7 +202,8 @@ app.get('/api/profile', async (req, res) => {
       gender: user.gender,
       city: user.city,
       location: user.location,
-      musicSkills: user.musicSkills
+      musicSkills: user.musicSkills,
+      onboarded: user.onboarded
     });
   } catch (err) {
     res.status(401).json({ error: 'Invalid token.' });
@@ -199,7 +219,7 @@ app.put('/api/profile', async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev_secret');
     const user = await User.findOne({ email: decoded.email });
     if (!user) return res.status(404).json({ error: 'User not found.' });
-    const { profilePicture, birthday, gender, city, location, musicSkills } = req.body;
+    const { profilePicture, birthday, gender, city, location, musicSkills, onboarded } = req.body;
     if (profilePicture !== undefined) user.profilePicture = profilePicture;
     if (birthday !== undefined) user.birthday = birthday;
     if (gender !== undefined) user.gender = gender;
@@ -213,6 +233,7 @@ app.put('/api/profile', async (req, res) => {
       };
     }
 
+    if (onboarded !== undefined) user.onboarded = onboarded;
     await user.save();
     res.json({
       message: 'Profile updated.',
@@ -221,7 +242,8 @@ app.put('/api/profile', async (req, res) => {
       gender: user.gender,
       city: user.city,
       location: user.location,
-      musicSkills: user.musicSkills
+      musicSkills: user.musicSkills,
+      onboarded: user.onboarded
     });
   } catch (err) {
     res.status(500).json({ error: 'Could not update profile.' });

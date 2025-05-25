@@ -20,6 +20,8 @@ const userSchema = new mongoose.Schema({
   },
   musiliked_genres: [{ type: String }],
   musiliked_artistes: [{ type: String }],
+  musiliked_tracks: [{ type: String }],
+  onboarded: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }
 });
 
