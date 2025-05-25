@@ -37,6 +37,8 @@ function Toast({ message, onClose }) {
 
 
 function App() {
+  // Onglet actif pour la section Music
+  const [musicTab, setMusicTab] = useState('search');
   const [musilikedRefreshFlag, setMusilikedRefreshFlag] = useState(false);
   const [page, setPage] = useState('search');
   const toggleMusilikedRefreshFlag = () => setMusilikedRefreshFlag(f => !f);
@@ -146,35 +148,32 @@ function App() {
           <h2>Hi {user.username}!</h2>
           <nav style={{marginBottom: 24}}>
   <div className="top-menu">
-    <button className="topbar-btn" onClick={() => setPage('search')}>Music Search</button>
-    <button className="topbar-btn" onClick={() => {
-      setPage('inbox');
-      if (inboxBadge > 0) {
-        setToast(`You have ${inboxBadge} new recommendation${inboxBadge > 1 ? 's' : ''} in your inbox!`);
-      }
-      setInboxBadge(0);
-      localStorage.setItem('inboxBadgeCount', '0');
-    }}>
-      Inbox{inboxBadge > 0 && <span className="badge">{inboxBadge}</span>}
-    </button>
-    <button className="topbar-btn" onClick={() => {
-      setPage('sent');
-      setSentBadge(0);
-      localStorage.setItem('sentBadgeCount', '0');
-    }}>
-      Sent{sentBadge > 0 && <span className="badge">{sentBadge}</span>}
-    </button>
+    <button className="topbar-btn" onClick={() => setPage('users-map')}>Music Mates</button>
+    <button className="topbar-btn" onClick={() => setPage('music')}>Share Music</button>
     <button className="topbar-btn topbar-btn-right" onClick={() => setPage('playlist')}>Liked Music</button>
     {/* <button className="topbar-btn topbar-btn-right" onClick={() => setPage('compatibility')}>Compatibility</button> */}
   </div>
 </nav>
-          {page === 'search' && <SpotifySearchBar onMusilikedChange={toggleMusilikedRefreshFlag} />}
+          {/* Onglets contextuels pour la section Music */}
+          {page === 'music' && (
+            <div className="music-tabs" style={{ display: 'flex', gap: 8, marginBottom: 18, justifyContent: 'center' }}>
+              <button className="music-tab-btn" onClick={() => setMusicTab('search')} style={{ fontWeight: musicTab === 'search' ? 700 : 400 }}>Search</button>
+              <button className="music-tab-btn" onClick={() => { setMusicTab('inbox'); setInboxBadge(0); localStorage.setItem('inboxBadgeCount', '0'); }} style={{ fontWeight: musicTab === 'inbox' ? 700 : 400 }}>
+                Inbox{inboxBadge > 0 && <span className="badge">{inboxBadge}</span>}
+              </button>
+              <button className="music-tab-btn" onClick={() => { setMusicTab('sent'); setSentBadge(0); localStorage.setItem('sentBadgeCount', '0'); }} style={{ fontWeight: musicTab === 'sent' ? 700 : 400 }}>
+                Sent{sentBadge > 0 && <span className="badge">{sentBadge}</span>}
+              </button>
+            </div>
+          )}
+          {/* Affichage du contenu selon le tab sélectionné */}
+          {page === 'music' && musicTab === 'search' && <SpotifySearchBar onMusilikedChange={toggleMusilikedRefreshFlag} />}
+          {page === 'music' && musicTab === 'inbox' && <Inbox userId={user._id} refreshFlag={refreshInboxFlag} />}
+          {page === 'music' && musicTab === 'sent' && <SentRecommendations userId={user._id} />}
           {page === 'playlist' && <MusicProfile musilikedRefreshFlag={musilikedRefreshFlag} />}
           {page === 'preferences' && <MusicPreferences />}
           {page === 'personal-profile' && <PersonalProfile />}
           {page === 'users-map' && user && user._id && <UsersMapWithCompatibility currentUserId={user._id} />}
-          {page === 'inbox' && <Inbox userId={user._id} refreshFlag={refreshInboxFlag} />}
-          {page === 'sent' && <SentRecommendations userId={user._id} />}
         </div>
       )}
     {toast && <Toast message={toast} onClose={() => setToast(null)} />}
