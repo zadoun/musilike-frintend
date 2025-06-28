@@ -212,6 +212,8 @@ app.get('/api/profile', async (req, res) => {
 
 // PUT /api/profile - update profile fields (profilePicture, birthday, gender)
 app.put('/api/profile', async (req, res) => {
+  // LOG: Incoming profile update
+  console.log('[PUT /api/profile] Incoming body:', JSON.stringify(req.body));
   const auth = req.headers.authorization;
   if (!auth) return res.status(401).json({ error: 'No token provided.' });
   const token = auth.split(' ')[1];
@@ -233,8 +235,12 @@ app.put('/api/profile', async (req, res) => {
       };
     }
 
-    if (onboarded !== undefined) user.onboarded = onboarded;
+    if (onboarded !== undefined) {
+      user.onboarded = onboarded;
+      console.log('[PUT /api/profile] Setting onboarded to:', onboarded);
+    }
     await user.save();
+    console.log('[PUT /api/profile] Saved user.onboarded:', user.onboarded, 'for user', user.email);
     res.json({
       message: 'Profile updated.',
       profilePicture: user.profilePicture,

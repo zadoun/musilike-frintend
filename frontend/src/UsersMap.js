@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import API_URL from './api';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import L from 'leaflet';
+
 import { createProfileIcon } from './ProfileMarker';
 import 'leaflet/dist/leaflet.css';
 
-export default function UsersMap({ onUserSelect }) {
+export default function UsersMap({ onUserSelect, users: usersProp, currentUserId }) {
 
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -12,22 +14,30 @@ export default function UsersMap({ onUserSelect }) {
   const [noToken, setNoToken] = useState(false);
   const [token, setToken] = useState(() => localStorage.getItem('token'));
 
-  // Surveille le token dans localStorage (ex: après login/logout)
+  // Si usersProp fourni, pas de fetch interne
   useEffect(() => {
+    if (usersProp) {
+      setUsers(usersProp);
+      setLoading(false);
+      setNoToken(false);
+      setError('');
+      return;
+    }
+    // Surveille le token dans localStorage (ex: après login/logout)
     const checkToken = () => {
       const t = localStorage.getItem('token');
       setToken(t);
     };
     window.addEventListener('storage', checkToken);
-    // Pour login sur même onglet, on vérifie aussi périodiquement
     const interval = setInterval(checkToken, 500);
     return () => {
       window.removeEventListener('storage', checkToken);
       clearInterval(interval);
     };
-  }, []);
+  }, [usersProp]);
 
   useEffect(() => {
+    if (usersProp) return;
     if (!token) {
       setNoToken(true);
       setLoading(false);
@@ -46,19 +56,104 @@ export default function UsersMap({ onUserSelect }) {
         setLoading(false);
       })
       .catch(() => { setError('Could not load users'); setLoading(false); });
-  }, [token]);
+  }, [token, usersProp]);
 
   // Default map center (Europe)
   const defaultCenter = [48.8588443, 2.2943506];
 
   // Only show users with valid coordinates
-  const usersWithCoords = users.filter(u => u.location && u.location.latitude && u.location.longitude);
+  const usersWithCoords = users.filter(
+    u =>
+      u.location &&
+      typeof u.location.latitude === 'number' &&
+      typeof u.location.longitude === 'number' &&
+      !isNaN(u.location.latitude) &&
+      !isNaN(u.location.longitude)
+  );
+
+  // Register React-Leaflet markers with the spiderfier
+// Register React-Leaflet markers with the spiderfier
+const markerRefs = React.useRef([]);
+function RegisterSpiderfier({ markerRefs, usersWithCoords, onUserSelect }) {
+  const map = useMap();
+  const [spiderfier, setSpiderfier] = useState(null);
+
+  // Store a ref to the click handler to avoid duplicate listeners
+  const clickHandlerRef = React.useRef();
+
+  useEffect(() => {
+    if (!map) return;
+    // Always destroy previous spiderfier before creating a new one
+    if (spiderfier) {
+      spiderfier.clearMarkers();
+      if (spiderfier.removeListener && clickHandlerRef.current) {
+        spiderfier.removeListener('click', clickHandlerRef.current);
+      }
+      setSpiderfier(null);
+      console.log('[Spiderfier] Destroyed previous instance');
+    }
+    const OMS = window.OverlappingMarkerSpiderfier || L.OverlappingMarkerSpiderfier;
+    if (OMS) {
+      const s = new OMS(map, {
+        keepSpiderfied: true,
+        legLength: 80, // wider arms
+        circleFootSeparation: 60 // more space between markers in circle
+      });
+      setSpiderfier(s);
+      console.log('[Spiderfier] Initialized with wide spread');
+      return () => {
+        s.clearMarkers();
+        if (s.removeListener && clickHandlerRef.current) {
+          s.removeListener('click', clickHandlerRef.current);
+        }
+        console.log('[Spiderfier] Cleaned up');
+      };
+    } else {
+      console.error('OverlappingMarkerSpiderfier is not available on window or L.\nYou must add <script src="https://unpkg.com/overlapping-marker-spiderfier-leaflet/oms.min.js"></script> to your public/index.html after Leaflet.');
+    }
+  }, [map]);
+
+  useEffect(() => {
+    if (!spiderfier) return;
+    spiderfier.clearMarkers();
+    markerRefs.current.forEach((ref, idx) => {
+      // For React-Leaflet v3+, ref.current is the Leaflet marker instance
+      const markerInstance = ref.current && (ref.current._leaflet_id ? ref.current : ref.current?.leafletElement);
+      if (markerInstance && markerInstance._latlng) {
+        // Attach userId to marker instance for lookup in click handler
+        markerInstance._userId = usersWithCoords[idx]._id;
+        spiderfier.addMarker(markerInstance);
+        console.log('[Spiderfier] Registered marker', idx, markerInstance.getLatLng());
+      }
+    });
+    // Log all marker coordinates for debugging
+    const allCoords = markerRefs.current.map(ref => {
+      const markerInstance = ref.current && (ref.current._leaflet_id ? ref.current : ref.current?.leafletElement);
+      return markerInstance && markerInstance._latlng ? markerInstance.getLatLng() : null;
+    });
+    console.log('[Spiderfier] All marker coordinates:', allCoords);
+    // Remove previous click handler if present
+    if (clickHandlerRef.current && spiderfier.removeListener) {
+      spiderfier.removeListener('click', clickHandlerRef.current);
+    }
+    // Add spiderfier click handler to show comparison card
+    const handleSpiderfierClick = (marker) => {
+      if (marker && marker._userId && onUserSelect) {
+        onUserSelect(marker._userId);
+      }
+    };
+    spiderfier.addListener('click', handleSpiderfierClick);
+    clickHandlerRef.current = handleSpiderfierClick;
+  }, [spiderfier, usersWithCoords, onUserSelect]);
+
+  return null;
+}
+
 
   if (loading) return <div>Loading map…</div>;
   if (noToken) return <div style={{ color: '#b44', fontWeight: 600, margin: '40px 0', textAlign: 'center' }}>Veuillez vous connecter pour voir la carte des utilisateurs.</div>;
   if (error) return <div style={{color: 'red'}}>{error}</div>;
-  if (usersWithCoords.length === 0) return <div>Aucun utilisateur à afficher sur la carte.</div>;
-
+  // Affiche la carte même s'il n'y a aucun utilisateur
   return (
     <div
       style={{
@@ -88,16 +183,26 @@ export default function UsersMap({ onUserSelect }) {
           attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        {usersWithCoords.map(user => (
-          <Marker
-            key={user._id}
-            position={[user.location.latitude, user.location.longitude]}
-            icon={createProfileIcon(user.profilePicture, user.compatibilityScore ?? null)}
-            eventHandlers={{
-              click: () => onUserSelect && onUserSelect(user._id)
-            }}
-          />
-        ))}
+        {/* Render all markers as before */}
+        {/* Prepare refs for all markers */}
+        {usersWithCoords.map((user, idx) => {
+          const isMe = currentUserId && user._id === currentUserId;
+          if (!markerRefs.current[idx]) markerRefs.current[idx] = React.createRef();
+          return (
+            <Marker
+              key={user._id}
+              position={[user.location.latitude, user.location.longitude]}
+              icon={createProfileIcon(
+                user.profilePicture,
+                isMe ? 'Me' : (user.compatibilityScore ?? null),
+                64,
+                isMe ? '#e74c3c' : undefined // red for 'me', gold default
+              )}
+              ref={markerRefs.current[idx]}
+            />
+          );
+        })}
+        <RegisterSpiderfier markerRefs={markerRefs} usersWithCoords={usersWithCoords} onUserSelect={onUserSelect} />
       </MapContainer>
       <style>{`
         @media (max-width: 600px) {

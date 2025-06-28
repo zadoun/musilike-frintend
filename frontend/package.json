@@ -9,6 +9,7 @@
     "@mui/material": "^7.1.0",
     "cra-template-pwa": "2.0.0",
     "leaflet": "^1.9.4",
+    "overlapping-marker-spiderfier-leaflet": "^0.2.7",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-leaflet": "^5.0.0",

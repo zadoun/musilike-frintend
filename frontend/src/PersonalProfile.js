@@ -8,6 +8,7 @@ export default function PersonalProfile() {
   const [city, setCity] = useState('');
   const [location, setLocation] = useState({ latitude: '', longitude: '' });
   const [useGPS, setUseGPS] = useState(false);
+  const [profilePicture, setProfilePicture] = useState('');
   const [saveStatus, setSaveStatus] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -24,6 +25,7 @@ export default function PersonalProfile() {
         setGender(data.gender || 'prefer_not_to_say');
         setCity(data.city || '');
         setLocation(data.location || { latitude: '', longitude: '' });
+        setProfilePicture(data.profilePicture || '');
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -86,7 +88,8 @@ export default function PersonalProfile() {
         birthday: birthday ? new Date(birthday) : null,
         gender,
         city: useGPS ? '' : city,
-        location: useGPS ? location : coords
+        location: useGPS ? location : coords,
+        profilePicture: profilePicture || ''
       })
     })
       .then(res => res.ok ? res.json() : Promise.reject())
@@ -101,9 +104,28 @@ export default function PersonalProfile() {
 
   if (loading) return <div style={{marginTop: 40}}>Loading profile or saving…</div>;
 
+  // Fallback avatar
+  const fallbackAvatar = 'https://ui-avatars.com/api/?name=U&background=aaa&color=fff&size=128';
+
   return (
     <div style={{marginTop: 48, padding: 24, background: '#fafbfc', borderRadius: 12, boxShadow: '0 1px 6px rgba(0,0,0,0.07)', maxWidth: 700, marginLeft: 'auto', marginRight: 'auto'}}>
       <h3 style={{marginBottom: 18}}>Personal Profile</h3>
+      <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 24}}>
+        <img
+          src={profilePicture || fallbackAvatar}
+          alt="Profile"
+          style={{ width: 96, height: 96, borderRadius: '50%', objectFit: 'cover', border: '2px solid #ccc', marginBottom: 8 }}
+        />
+        {editMode && (
+          <input
+            type="text"
+            value={profilePicture}
+            onChange={e => setProfilePicture(e.target.value)}
+            placeholder="Paste image URL (jpg/png/webp)"
+            style={{ width: 320, padding: 6, borderRadius: 6, border: '1px solid #bbb', marginTop: 6 }}
+          />
+        )}
+      </div>
       <form onSubmit={handleSave} style={{ textAlign: 'left' }}>
         <div style={{marginBottom: 18}}>
           <label style={{fontWeight: 600, marginRight: 16}}>

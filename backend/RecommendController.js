@@ -20,8 +20,8 @@ const listUsers = async (req, res) => {
     return res.status(401).json({ error: 'Invalid token.' });
   }
   try {
-    // Exclude the current user from the list
-    const users = await User.find({ _id: { $ne: user._id } }, { password: 0 });
+    // INCLUDE the current user in the list (fix for map 'Me' marker)
+    const users = await User.find({}, { password: 0 });
     // For each user, compute compatibility score with the current user
     const usersWithCompatibility = await Promise.all(users.map(async (otherUser) => {
       try {
@@ -32,6 +32,13 @@ const listUsers = async (req, res) => {
         return { ...otherUser.toObject(), compatibilityScore: null };
       }
     }));
+    // Debug: log the user object for the current user
+    const currentUserObj = usersWithCompatibility.find(u => String(u._id) === String(user._id));
+    if (currentUserObj) {
+      console.log('[RecommendController] Current user object sent to frontend:', currentUserObj);
+    } else {
+      console.warn('[RecommendController] Current user not found in usersWithCompatibility');
+    }
     res.json({ users: usersWithCompatibility });
   } catch (err) {
     res.status(500).json({ error: 'Could not fetch users.' });
