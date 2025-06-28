@@ -31,14 +31,14 @@ export default function Inbox({ refreshFlag }) {
         setLoading(false);
       });
     // Fetch hidden recommendation ids
-    fetch('/api/hidden-recommendation', {
+    fetch(`${API_URL}/api/hidden-recommendation`, {
       headers: { 'Authorization': 'Bearer ' + token }
     })
       .then(res => res.ok ? res.json() : Promise.reject())
       .then(data => setHiddenIds(data.hiddenIds || []))
       .catch(() => setHiddenIds([]));
     // Fetch musiliked track ids
-    fetch('/api/musiliked', {
+    fetch(`${API_URL}/api/musiliked`, {
       headers: { 'Authorization': 'Bearer ' + token }
     })
       .then(res => res.ok ? res.json() : Promise.reject())
@@ -48,10 +48,65 @@ export default function Inbox({ refreshFlag }) {
       .catch(() => setMusilikedIds([]));
   }, [refreshFlag]);
 
-  const handleLikeToggle = (trackId, liked) => {
-    setMusilikedIds(ids => liked ? [...ids, trackId] : ids.filter(id => id !== trackId));
+  const refreshMusilikedIds = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    try {
+      const res = await fetch(`${API_URL}/api/musiliked`, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setMusilikedIds((data.tracks || []).map(t => t.trackId));
+      }
+    } catch {}
   };
 
+  const handleLikeToggle = async (track, liked) => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    try {
+      if (liked) {
+        // Like
+        const res = await fetch(`${API_URL}/api/musiliked`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token,
+          },
+          body: JSON.stringify({
+            trackId: track.id,
+            trackName: track.name,
+            artists: track.artists ? track.artists.map(a => a.name) : [],
+            albumName: track.album ? track.album.name : '',
+            albumImage: track.album && track.album.images && track.album.images[0] ? track.album.images[0].url : '',
+            spotifyUrl: track.external_urls ? track.external_urls.spotify : '',
+            rawTrack: track,
+          }),
+        });
+        if (!res.ok) {
+          const data = await res.json();
+          if (data.error && data.error.toLowerCase().includes('already musi-liked')) {
+            refreshMusilikedIds();
+            return;
+          } else {
+            alert('Error: ' + (data.error || 'Could not like track.'));
+          }
+        }
+      } else {
+        // Unlike
+        await fetch(`${API_URL}/api/musiliked/${track.id}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': 'Bearer ' + token,
+          },
+        });
+      }
+    } catch (err) {
+      // Optionally show error/toast here
+    }
+    refreshMusilikedIds();
+  };
 
   // Filter out hidden recommendations
   function handleHide(recId) {
@@ -92,7 +147,7 @@ export default function Inbox({ refreshFlag }) {
               <RecommendationCard
                 rec={rec}
                 musilikedIds={musilikedIds}
-                onLikeToggle={handleLikeToggle}
+                refreshMusilikedIds={refreshMusilikedIds}
                 hidden={hiddenIds.includes(rec._id)}
                 onHide={handleHide}
               />

@@ -5,6 +5,8 @@ const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret';
 
 // GET /api/users - List users (for recommendation selection)
+const MusilikedController = require('./MusilikedController');
+
 const listUsers = async (req, res) => {
   const auth = req.headers.authorization;
   if (!auth) return res.status(401).json({ error: 'No token provided.' });
@@ -18,12 +20,90 @@ const listUsers = async (req, res) => {
     return res.status(401).json({ error: 'Invalid token.' });
   }
   try {
-    // Exclude the current user from the list
-    const users = await User.find({ _id: { $ne: user._id } }, { password: 0 });
-    res.json({ users });
+    // INCLUDE the current user in the list (fix for map 'Me' marker)
+    const users = await User.find({}, { password: 0 });
+    // For each user, compute compatibility score with the current user
+    const usersWithCompatibility = await Promise.all(users.map(async (otherUser) => {
+      try {
+        // Use the new flexible compatibility logic
+        const { scores } = await MusilikedController.calculateCompatibilityFlexible(user._id, otherUser._id);
+        return { ...otherUser.toObject(), compatibilityScore: Math.round(scores.weightedScore * 100) };
+      } catch (e) {
+        return { ...otherUser.toObject(), compatibilityScore: null };
+      }
+    }));
+    // Debug: log the user object for the current user
+    const currentUserObj = usersWithCompatibility.find(u => String(u._id) === String(user._id));
+    if (currentUserObj) {
+      console.log('[RecommendController] Current user object sent to frontend:', currentUserObj);
+    } else {
+      console.warn('[RecommendController] Current user not found in usersWithCompatibility');
+    }
+    res.json({ users: usersWithCompatibility });
   } catch (err) {
     res.status(500).json({ error: 'Could not fetch users.' });
   }
+};
+
+// --- Internal helper to keep compatibility logic DRY ---
+const Musiliked = require('./models/Musiliked');
+const COMPATIBILITY_WEIGHTS = {
+  track: 0.4,
+  artist: 0.3,
+  genre: 0.3
+};
+MusilikedController.calculateCompatibility = async (userA, userB) => {
+  // This mirrors the logic in getCompatibility
+  const trackWeight = COMPATIBILITY_WEIGHTS.track;
+  const artistWeight = COMPATIBILITY_WEIGHTS.artist;
+  const genreWeight = COMPATIBILITY_WEIGHTS.genre;
+  // Check if either user has no genres
+  const hasGenresA = genresA.size > 0;
+  const hasGenresB = genresB.size > 0;
+  let normTrackWeight, normArtistWeight, normGenreWeight;
+  if (hasGenresA && hasGenresB) {
+    const totalWeight = trackWeight + artistWeight + genreWeight;
+    normTrackWeight = trackWeight / totalWeight;
+    normArtistWeight = artistWeight / totalWeight;
+    normGenreWeight = genreWeight / totalWeight;
+  } else {
+    // Ignore genre weight, renormalize
+    const totalWeight = trackWeight + artistWeight;
+    normTrackWeight = trackWeight / totalWeight;
+    normArtistWeight = artistWeight / totalWeight;
+    normGenreWeight = 0;
+  }
+
+  // Get all musiliked tracks for both users
+  const [tracksA, tracksB] = await Promise.all([
+    Musiliked.find({ user: userA }),
+    Musiliked.find({ user: userB })
+  ]);
+  // Track ID overlap
+  const idsA = new Set(tracksA.map(t => t.trackId));
+  const idsB = new Set(tracksB.map(t => t.trackId));
+  const sharedTrackIds = [...idsA].filter(id => idsB.has(id));
+  // Artist overlap
+  const artistsA = new Set(tracksA.flatMap(t => t.artists || []));
+  const artistsB = new Set(tracksB.flatMap(t => t.artists || []));
+  const sharedArtists = [...artistsA].filter(artist => artistsB.has(artist));
+  // Genre overlap (from user.musiliked_genres)
+  const User = require('./models/User');
+  const userAObj = await User.findById(userA);
+  const userBObj = await User.findById(userB);
+  const genresA = new Set(Array.isArray(userAObj?.musiliked_genres) ? userAObj.musiliked_genres : []);
+  const genresB = new Set(Array.isArray(userBObj?.musiliked_genres) ? userBObj.musiliked_genres : []);
+  let sharedGenres = [];
+  let genreScore = 0;
+  if (hasGenresA && hasGenresB) {
+    sharedGenres = [...genresA].filter(genre => genresB.has(genre));
+    genreScore = sharedGenres.length / (new Set([...genresA, ...genresB]).size || 1);
+  }
+  // Compatibility scores
+  const trackScore = sharedTrackIds.length / (new Set([...idsA, ...idsB]).size || 1);
+  const artistScore = sharedArtists.length / (new Set([...artistsA, ...artistsB]).size || 1);
+  const weightedScore = (trackScore * normTrackWeight) + (artistScore * normArtistWeight) + (genreScore * normGenreWeight);
+  return { weightedScore };
 };
 
 // POST /api/recommend - Send a recommendation
@@ -59,12 +139,12 @@ const sendRecommendation = async (req, res) => {
           message,
           track
         });
-        console.log('Emitted new-recommendation to', toUserId);
+        
       } else {
-        console.log('No socket found for recipient:', toUserId);
+        
       }
     } catch (e) {
-      console.log('Socket emit error:', e);
+      
     }
     res.status(201).json({ message: 'Recommendation sent!' });
   } catch (err) {
@@ -121,12 +201,12 @@ const reactToRecommendation = async (req, res) => {
           recommendationId: rec._id,
           reaction: rec.reaction
         });
-        console.log('Emitted recommendation-reacted to', senderId);
+        
       } else {
-        console.log('No socket found for sender:', senderId);
+        
       }
     } catch (e) {
-      console.log('Socket emit error:', e);
+      
     }
 
     res.json({ success: true, reaction: rec.reaction });

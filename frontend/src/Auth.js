@@ -18,11 +18,11 @@ function Auth({ onAuth }) {
     }
     setError('');
     try {
-      const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+      const endpoint = isLogin ? `${API_URL}/api/auth/login` : `${API_URL}/api/auth/register`;
       const body = isLogin
         ? { email, password }
         : { email, password, username };
-      const res = await fetch(`${API_URL}${endpoint}`, {
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
@@ -34,7 +34,8 @@ function Auth({ onAuth }) {
       }
       if (isLogin) {
         localStorage.setItem('token', data.token);
-        onAuth && onAuth({ email: data.email, username: data.username });
+
+      onAuth && onAuth({ email: data.email, username: data.username, _id: data._id });
       } else {
         setIsLogin(true);
         setSuccess('Registration successful! Please log in.');

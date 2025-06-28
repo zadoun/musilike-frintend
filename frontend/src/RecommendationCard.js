@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import './RecommendationCard.css';
 import API_URL from './api';
+import MusilikeButton from './MusilikeButton';
 
-export default function RecommendationCard({ rec, musilikedIds, onLikeToggle, onHide, hidden }) {
+export default function RecommendationCard({ rec, musilikedIds, refreshMusilikedIds, onHide, hidden }) {
   // Reaction state for recipient
   const [reactionEmoji, setReactionEmoji] = useState('');
   const [reactionText, setReactionText] = useState('');
@@ -41,59 +42,7 @@ export default function RecommendationCard({ rec, musilikedIds, onLikeToggle, on
       alert('Network error');
     }
   };
-  const [isLiked, setIsLiked] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [folded, setFolded] = useState(false);
-
-  useEffect(() => {
-    setIsLiked(musilikedIds.includes(rec.track?.id));
-  }, [musilikedIds, rec.track]);
-
-  const handleLike = async () => {
-    if (!rec.track) return;
-    setLoading(true);
-    const token = localStorage.getItem('token');
-    try {
-      if (!isLiked) {
-        // Like
-        const res = await fetch(`${API_URL}/api/musiliked`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + token,
-          },
-          body: JSON.stringify({
-            trackId: rec.track.id,
-            trackName: rec.track.name,
-            artists: rec.track.artists,
-            albumName: rec.track.album?.name,
-            albumImage: rec.track.album?.images?.[0]?.url,
-            spotifyUrl: rec.track.external_urls?.spotify,
-            rawTrack: rec.track,
-          })
-        });
-        if (res.ok) {
-          setIsLiked(true);
-          onLikeToggle && onLikeToggle(rec.track.id, true);
-        }
-      } else {
-        // Unlike
-        const res = await fetch(`${API_URL}/api/musiliked/${rec.track.id}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': 'Bearer ' + token,
-          }
-        });
-        if (res.ok) {
-          setIsLiked(false);
-          onLikeToggle && onLikeToggle(rec.track.id, false);
-        }
-      }
-    } catch (err) {
-      // Optionally handle error
-    }
-    setLoading(false);
-  };
 
   if (hidden && !folded) {
     // Animate fold-out
@@ -121,69 +70,13 @@ export default function RecommendationCard({ rec, musilikedIds, onLikeToggle, on
           ></iframe>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flex: 1 }}>
-          <button
-            className={`like-btn ${isLiked ? 'liked' : 'unliked'}`}
-            title={isLiked ? 'Remove Musi-Like' : 'Musi-Like this song!'}
-            disabled={loading}
-            onClick={async () => {
-              if (!rec.track) return;
-              setLoading(true);
-              const token = localStorage.getItem('token');
-              try {
-                if (!isLiked) {
-                  // Like
-                  const res = await fetch(`${API_URL}/api/musiliked`, {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                      'Authorization': 'Bearer ' + token,
-                    },
-                    body: JSON.stringify({
-                      trackId: rec.track.id,
-                      trackName: rec.track.name,
-                      artists: rec.track.artists ? rec.track.artists.map(a => a.name) : [],
-                      albumName: rec.track.album ? rec.track.album.name : '',
-                      albumImage: rec.track.album && rec.track.album.images && rec.track.album.images[0] ? rec.track.album.images[0].url : '',
-                      spotifyUrl: rec.track.external_urls ? rec.track.external_urls.spotify : '',
-                      rawTrack: rec.track,
-                    })
-                  });
-                  if (res.ok) {
-                    setIsLiked(true);
-                    onLikeToggle && onLikeToggle(rec.track.id, true);
-                  } else {
-                    const data = await res.json();
-                    alert('Error: ' + (data.error || 'Could not like track.'));
-                  }
-                } else {
-                  // Unlike
-                  const res = await fetch(`${API_URL}/api/musiliked/${rec.track.id}`, {
-                    method: 'DELETE',
-                    headers: {
-                      'Authorization': 'Bearer ' + token,
-                    },
-                  });
-                  if (res.ok) {
-                    setIsLiked(false);
-                    onLikeToggle && onLikeToggle(rec.track.id, false);
-                  } else {
-                    const data = await res.json();
-                    if (res.status === 404) {
-                      setIsLiked(false);
-                      onLikeToggle && onLikeToggle(rec.track.id, false);
-                    } else {
-                      alert('Error: ' + (data.error || 'Could not unlike track.'));
-                    }
-                  }
-                }
-              } catch (err) {
-                alert('Network error.');
-              }
-              setLoading(false);
-            }}
-          >
-            <span role="img" aria-label="thumb up">👍</span> <span style={{ fontSize: '0.75em' }}>{isLiked ? 'Musi-Liked' : 'Musi-Like'}</span>
-          </button>
+          <MusilikeButton
+            track={rec.track}
+            musilikedIds={musilikedIds}
+            refreshMusilikedIds={refreshMusilikedIds}
+            fromUserId={rec.fromUser?._id}
+            recommendationId={rec._id}
+          />
           {/* Trash button below Musi-Like */}
           <button
             className="trash-btn"

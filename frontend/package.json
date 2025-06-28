@@ -4,10 +4,17 @@
   "private": true,
   "proxy": "http://localhost:4000",
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/material": "^7.1.0",
     "cra-template-pwa": "2.0.0",
+    "leaflet": "^1.9.4",
+    "overlapping-marker-spiderfier-leaflet": "^0.2.7",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-leaflet": "^5.0.0",
     "react-scripts": "5.0.1",
+    "recharts": "^2.15.3",
     "socket.io-client": "^4.8.1",
     "web-vitals": "^4.2.4"
   },
